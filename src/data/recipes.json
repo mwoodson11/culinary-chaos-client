@@ -1,0 +1,146 @@
+[
+  {
+    "id": "vanilla-cake",
+    "name": "Classic Vanilla Cake",
+    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1089&q=80",
+    "ingredients": [
+      { "name": "All-purpose flour", "amount": "2 cups" },
+      { "name": "Granulated sugar", "amount": "1 1/2 cups" },
+      { "name": "Unsalted butter", "amount": "1 cup (2 sticks)" },
+      { "name": "Large eggs", "amount": "4" },
+      { "name": "Whole milk", "amount": "1 cup" },
+      { "name": "Vanilla extract", "amount": "2 teaspoons" },
+      { "name": "Baking powder", "amount": "2 teaspoons" },
+      { "name": "Salt", "amount": "1/2 teaspoon" }
+    ],
+    "instructions": [
+      "Preheat oven to 350°F (175°C). Grease and flour two 9-inch round cake pans.",
+      "In a large bowl, cream together butter and sugar until light and fluffy.",
+      "Add eggs one at a time, beating well after each addition. Stir in vanilla.",
+      "In a separate bowl, whisk together flour, baking powder, and salt.",
+      "Alternately add dry ingredients and milk to the butter mixture, beginning and ending with dry ingredients.",
+      "Divide batter evenly between prepared pans. Bake for 25-30 minutes or until a toothpick comes out clean.",
+      "Cool cakes in pans for 10 minutes, then remove to wire racks to cool completely.",
+      "Once cooled, frost and decorate as desired. Be creative with your design!"
+    ],
+    "timeToBake": 60
+  },
+  {
+    "id": "chocolate-cake",
+    "name": "Rich Chocolate Cake",
+    "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "All-purpose flour", "amount": "1 3/4 cups" },
+      { "name": "Cocoa powder", "amount": "3/4 cup" },
+      { "name": "Granulated sugar", "amount": "2 cups" },
+      { "name": "Unsalted butter", "amount": "1/2 cup" },
+      { "name": "Large eggs", "amount": "2" },
+      { "name": "Buttermilk", "amount": "1 cup" },
+      { "name": "Hot coffee", "amount": "1 cup" },
+      { "name": "Baking soda", "amount": "2 teaspoons" },
+      { "name": "Baking powder", "amount": "1 teaspoon" },
+      { "name": "Salt", "amount": "1 teaspoon" },
+      { "name": "Vanilla extract", "amount": "1 teaspoon" }
+    ],
+    "instructions": [
+      "Preheat oven to 350°F (175°C). Grease and flour two 9-inch round cake pans.",
+      "Sift together flour, cocoa powder, baking soda, baking powder, and salt in a large bowl.",
+      "In another bowl, cream butter and sugar until light and fluffy. Beat in eggs one at a time, then add vanilla.",
+      "Mix in the flour mixture alternately with buttermilk, beginning and ending with flour.",
+      "Stir in hot coffee until just combined. The batter will be thin.",
+      "Pour batter evenly into prepared pans. Bake for 30-35 minutes or until a toothpick comes out clean.",
+      "Cool in pans for 10 minutes, then remove to wire racks to cool completely.",
+      "Frost with your favorite chocolate frosting and decorate creatively!"
+    ],
+    "timeToBake": 60
+  },
+  {
+    "id": "red-velvet",
+    "name": "Red Velvet Cake",
+    "image": "https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "All-purpose flour", "amount": "2 1/2 cups" },
+      { "name": "Granulated sugar", "amount": "1 1/2 cups" },
+      { "name": "Unsalted butter", "amount": "1/2 cup" },
+      { "name": "Large eggs", "amount": "2" },
+      { "name": "Buttermilk", "amount": "1 cup" },
+      { "name": "Red food coloring", "amount": "2 tablespoons" },
+      { "name": "Cocoa powder", "amount": "2 tablespoons" },
+      { "name": "Baking soda", "amount": "1 teaspoon" },
+      { "name": "White vinegar", "amount": "1 teaspoon" },
+      { "name": "Vanilla extract", "amount": "1 teaspoon" },
+      { "name": "Salt", "amount": "1/2 teaspoon" }
+    ],
+    "instructions": [
+      "Preheat oven to 350°F (175°C). Grease and flour two 9-inch round cake pans.",
+      "In a medium bowl, whisk together flour, cocoa powder, baking soda, and salt.",
+      "In a large bowl, cream butter and sugar until light and fluffy. Beat in eggs one at a time.",
+      "Mix in vanilla, red food coloring, and vinegar.",
+      "Alternately add flour mixture and buttermilk, beginning and ending with flour.",
+      "Divide batter evenly between prepared pans. Bake for 25-30 minutes or until a toothpick comes out clean.",
+      "Cool in pans for 10 minutes, then remove to wire racks to cool completely.",
+      "Frost with cream cheese frosting and add decorative touches!"
+    ],
+    "timeToBake": 60
+  },
+  {
+    "id": "carrot-cake",
+    "name": "Carrot Cake",
+    "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "All-purpose flour", "amount": "2 cups" },
+      { "name": "Granulated sugar", "amount": "1 1/2 cups" },
+      { "name": "Vegetable oil", "amount": "1 cup" },
+      { "name": "Large eggs", "amount": "4" },
+      { "name": "Grated carrots", "amount": "3 cups" },
+      { "name": "Crushed pineapple", "amount": "1 cup (drained)" },
+      { "name": "Chopped walnuts", "amount": "1/2 cup" },
+      { "name": "Baking soda", "amount": "2 teaspoons" },
+      { "name": "Baking powder", "amount": "1 teaspoon" },
+      { "name": "Cinnamon", "amount": "2 teaspoons" },
+      { "name": "Salt", "amount": "1/2 teaspoon" },
+      { "name": "Vanilla extract", "amount": "1 teaspoon" }
+    ],
+    "instructions": [
+      "Preheat oven to 350°F (175°C). Grease and flour two 9-inch round cake pans.",
+      "In a large bowl, whisk together flour, baking soda, baking powder, cinnamon, and salt.",
+      "In another bowl, beat together oil, sugar, eggs, and vanilla until well combined.",
+      "Stir in grated carrots, crushed pineapple, and chopped walnuts.",
+      "Gradually mix in the flour mixture until just combined.",
+      "Divide batter evenly between prepared pans. Bake for 30-35 minutes or until a toothpick comes out clean.",
+      "Cool in pans for 10 minutes, then remove to wire racks to cool completely.",
+      "Frost with cream cheese frosting and garnish with additional walnuts or carrot decorations!"
+    ],
+    "timeToBake": 60
+  },
+  {
+    "id": "lemon-cake",
+    "name": "Lemon Cake",
+    "image": "https://images.unsplash.com/photo-1603532648955-039310d9ed75?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "All-purpose flour", "amount": "2 cups" },
+      { "name": "Granulated sugar", "amount": "1 1/2 cups" },
+      { "name": "Unsalted butter", "amount": "1/2 cup" },
+      { "name": "Large eggs", "amount": "3" },
+      { "name": "Lemon zest", "amount": "2 tablespoons" },
+      { "name": "Lemon juice", "amount": "1/4 cup" },
+      { "name": "Buttermilk", "amount": "1/2 cup" },
+      { "name": "Baking powder", "amount": "2 teaspoons" },
+      { "name": "Baking soda", "amount": "1/2 teaspoon" },
+      { "name": "Salt", "amount": "1/2 teaspoon" },
+      { "name": "Vanilla extract", "amount": "1 teaspoon" }
+    ],
+    "instructions": [
+      "Preheat oven to 350°F (175°C). Grease and flour two 9-inch round cake pans.",
+      "In a medium bowl, whisk together flour, baking powder, baking soda, and salt.",
+      "In a large bowl, cream butter and sugar until light and fluffy. Beat in eggs one at a time.",
+      "Mix in lemon zest, lemon juice, and vanilla extract.",
+      "Alternately add flour mixture and buttermilk, beginning and ending with flour.",
+      "Divide batter evenly between prepared pans. Bake for 25-30 minutes or until a toothpick comes out clean.",
+      "Cool in pans for 10 minutes, then remove to wire racks to cool completely.",
+      "Frost with lemon buttercream and decorate with lemon slices or zest!"
+    ],
+    "timeToBake": 60
+  }
+]
+

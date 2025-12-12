@@ -1,0 +1,118 @@
+[
+  {
+    "id": "margarita",
+    "name": "Classic Margarita",
+    "image": "https://images.unsplash.com/photo-1536935338788-846bb9981813?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "Tequila", "amount": "2 oz" },
+      { "name": "Fresh lime juice", "amount": "1 oz" },
+      { "name": "Triple sec", "amount": "1 oz" },
+      { "name": "Simple syrup", "amount": "1/2 oz" },
+      { "name": "Ice", "amount": "As needed" },
+      { "name": "Salt", "amount": "For rim (optional)" },
+      { "name": "Lime wedge", "amount": "1 (for garnish)" }
+    ],
+    "instructions": [
+      "If desired, rim the glass with salt by rubbing a lime wedge around the rim and dipping it in salt.",
+      "Fill a shaker with ice.",
+      "Add tequila, lime juice, triple sec, and simple syrup to the shaker.",
+      "Shake vigorously for 15-20 seconds until well chilled.",
+      "Strain into a salt-rimmed glass filled with fresh ice.",
+      "Garnish with a lime wedge.",
+      "Serve immediately and enjoy responsibly!"
+    ],
+    "timeToBake": 45
+  },
+  {
+    "id": "mojito",
+    "name": "Fresh Mojito",
+    "image": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "White rum", "amount": "2 oz" },
+      { "name": "Fresh mint leaves", "amount": "10-12 leaves" },
+      { "name": "Fresh lime juice", "amount": "1 oz" },
+      { "name": "Simple syrup", "amount": "3/4 oz" },
+      { "name": "Club soda", "amount": "2-3 oz" },
+      { "name": "Ice", "amount": "As needed" },
+      { "name": "Lime wedge", "amount": "1 (for garnish)" }
+    ],
+    "instructions": [
+      "Lightly muddle the mint leaves in a glass with simple syrup.",
+      "Add lime juice and rum to the glass.",
+      "Fill the glass with ice.",
+      "Top with club soda and gently stir.",
+      "Garnish with a lime wedge and fresh mint sprig.",
+      "Serve with a straw and enjoy!"
+    ],
+    "timeToBake": 45
+  },
+  {
+    "id": "old_fashioned",
+    "name": "Old Fashioned",
+    "image": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "Bourbon or rye whiskey", "amount": "2 oz" },
+      { "name": "Sugar cube or simple syrup", "amount": "1 cube or 1/4 oz" },
+      { "name": "Angostura bitters", "amount": "2-3 dashes" },
+      { "name": "Orange peel", "amount": "1 strip" },
+      { "name": "Ice", "amount": "Large cube or sphere" },
+      { "name": "Cherry", "amount": "1 (for garnish, optional)" }
+    ],
+    "instructions": [
+      "Place sugar cube in an Old Fashioned glass and add bitters.",
+      "Muddle the sugar cube until it dissolves (or use simple syrup).",
+      "Add a large ice cube or sphere.",
+      "Pour in the whiskey and stir gently for 20-30 seconds.",
+      "Express the orange peel over the drink and drop it in.",
+      "Garnish with a cherry if desired.",
+      "Serve and enjoy this classic cocktail!"
+    ],
+    "timeToBake": 45
+  },
+  {
+    "id": "cosmopolitan",
+    "name": "Cosmopolitan",
+    "image": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "Vodka", "amount": "1 1/2 oz" },
+      { "name": "Triple sec", "amount": "1 oz" },
+      { "name": "Cranberry juice", "amount": "1/2 oz" },
+      { "name": "Fresh lime juice", "amount": "1/2 oz" },
+      { "name": "Ice", "amount": "As needed" },
+      { "name": "Lime twist", "amount": "1 (for garnish)" }
+    ],
+    "instructions": [
+      "Fill a shaker with ice.",
+      "Add vodka, triple sec, cranberry juice, and lime juice.",
+      "Shake vigorously for 15-20 seconds until well chilled.",
+      "Strain into a chilled martini glass.",
+      "Garnish with a lime twist.",
+      "Serve immediately and enjoy!"
+    ],
+    "timeToBake": 45
+  },
+  {
+    "id": "whiskey_sour",
+    "name": "Whiskey Sour",
+    "image": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "Bourbon whiskey", "amount": "2 oz" },
+      { "name": "Fresh lemon juice", "amount": "3/4 oz" },
+      { "name": "Simple syrup", "amount": "3/4 oz" },
+      { "name": "Egg white", "amount": "1 (optional, for froth)" },
+      { "name": "Ice", "amount": "As needed" },
+      { "name": "Lemon slice", "amount": "1 (for garnish)" },
+      { "name": "Cherry", "amount": "1 (for garnish)" }
+    ],
+    "instructions": [
+      "If using egg white, add it to a shaker first (dry shake without ice for 10 seconds).",
+      "Add bourbon, lemon juice, and simple syrup to the shaker.",
+      "Fill shaker with ice and shake vigorously for 15-20 seconds.",
+      "Strain into a rocks glass filled with fresh ice.",
+      "Garnish with a lemon slice and cherry.",
+      "Serve and enjoy this classic sour cocktail!"
+    ],
+    "timeToBake": 45
+  }
+]
+
