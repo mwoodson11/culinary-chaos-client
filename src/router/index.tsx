@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createHashRouter } from 'react-router-dom'
 import App from '@/App'
 import HomeView from '@/views/HomeView'
 import CreateGameView from '@/views/CreateGameView'
@@ -8,7 +8,7 @@ import GameIntroView from '@/views/games/GameIntroView'
 import GamePlayView from '@/views/games/GamePlayView'
 import GameCountdownView from '@/views/games/GameCountdownView'
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <App />,
