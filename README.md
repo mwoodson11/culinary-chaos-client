@@ -14,7 +14,13 @@ This client is built with [VueJS]() & [Vuetfify](). It provides an interface for
 
 ```npm install```
 
-3) Run the client by reading *Development* or *Production* below.
+3) Create a `.env` file (optional, for local development):
+
+```bash
+VITE_SERVER_URL=http://localhost:3000
+```
+
+4) Run the client by reading *Development* or *Production* below.
 
 ## Development
 
@@ -29,3 +35,19 @@ For a production server:
 ```npm run build```
 
 ```npm run start```
+
+## Environment Variables
+
+### VITE_SERVER_URL
+
+The URL of the Socket.io server to connect to. 
+
+- **Default**: `http://localhost:3000` (for local development)
+- **Production**: Set this to your server's URL (e.g., `https://your-server.herokuapp.com`)
+
+**For local development**, create a `.env` file in the root directory:
+```bash
+VITE_SERVER_URL=http://localhost:3000
+```
+
+**For GitHub Pages deployment**, add `VITE_SERVER_URL` as a GitHub secret in your repository settings (Settings → Secrets and variables → Actions), then it will be automatically used during the build process.

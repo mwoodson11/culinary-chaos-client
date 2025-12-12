@@ -50,8 +50,11 @@ interface GameSessionState {
   showToast?: (message: string, severity?: 'success' | 'error' | 'warning' | 'info', duration?: number) => void
 }
 
+// Get server URL from environment variable, default to localhost for development
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+
 export const useGameSessionStore = create<GameSessionState>((set, get) => ({
-  socket: io("ws://localhost:3000"),
+  socket: io(SERVER_URL),
   gameid: '',
   players: [],
   gameType: '',
