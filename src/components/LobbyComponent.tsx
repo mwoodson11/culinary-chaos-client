@@ -18,7 +18,7 @@ function LobbyComponent() {
 
   // Warn user before leaving/refreshing during lobby
   useBeforeUnload(
-    gameid && socket.connected,
+    !!(gameid && socket.connected),
     'Are you sure you want to leave? You will be disconnected from the game lobby.'
   )
 

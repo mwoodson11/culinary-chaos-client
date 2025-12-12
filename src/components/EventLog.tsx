@@ -5,8 +5,6 @@ import { serverEvents } from '@/types/events'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import BuildIcon from '@mui/icons-material/Build'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
-import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 
 interface GameEvent {
   id: string

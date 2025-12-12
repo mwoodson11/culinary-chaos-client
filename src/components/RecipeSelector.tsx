@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Grid, Button, Card, CardMedia, CardContent, CardActionArea, TextField, MenuItem, Select, FormControl, InputLabel, Collapse, List, ListItem, ListItemText, Chip, IconButton, Checkbox, FormControlLabel, FormGroup } from '@mui/material'
+import { Box, Typography, Paper, Grid, Button, Card, CardMedia, CardContent, CardActionArea, MenuItem, Select, FormControl, InputLabel, Collapse, List, ListItem, ListItemText, Chip, Checkbox, FormControlLabel } from '@mui/material'
 import { useState, useMemo } from 'react'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import recipesData from '@/data/recipes.json'

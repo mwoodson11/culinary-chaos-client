@@ -18,7 +18,6 @@ function JoinGameComponent() {
   const [gameid, setGameid] = useState('1000')
   const [name, setName] = useState('')
   const [gameidError, setGameidError] = useState('')
-  const [nameError, setNameError] = useState('')
   const [disconnectedPlayers, setDisconnectedPlayers] = useState<DisconnectedPlayer[]>([])
   const [showDisconnectedPlayers, setShowDisconnectedPlayers] = useState(false)
   const { joinGame, rejoinGame, socket } = useGameSessionStore()

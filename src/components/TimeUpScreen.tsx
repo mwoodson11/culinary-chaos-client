@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Container } from '@mui/material'
+import { Typography, Paper, Container } from '@mui/material'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 
 function TimeUpScreen() {

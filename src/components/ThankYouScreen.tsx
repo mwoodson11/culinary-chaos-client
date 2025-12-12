@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Container, Button } from '@mui/material'
+import { Typography, Paper, Container, Button } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 

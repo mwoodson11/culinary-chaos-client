@@ -66,11 +66,11 @@ function attemptRejoin(
       // If game has started, go to game play
       if (data?.recipe || data?.gameStarted) {
         console.log('Game started, navigating to game play')
-        navigate('/game/play', { replace: true })
+        navigate('/game/play')
       } else {
         // If game hasn't started, go to lobby
         console.log('Game not started, navigating to lobby')
-        navigate('/lobby', { replace: true })
+        navigate('/lobby')
       }
     }, 100)
     // Clean up listeners

@@ -161,7 +161,7 @@ function ColorSchemeGame({
   }
 
   const handleAnswer = (isMatch?: boolean, matches?: number) => {
-    if (isDisabled || showIncorrect) return
+    if (isDisabled || showIncorrect || !currentQuestion) return
     
     setIsDisabled(true)
     onAnswerSubmit(currentQuestion.questionIndex, isMatch, matches)
@@ -204,7 +204,7 @@ function ColorSchemeGame({
           // Two combinations display
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Box sx={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {currentQuestion.combinations.map((combo, idx) => {
+              {currentQuestion && 'combinations' in currentQuestion && currentQuestion.combinations?.map((combo, idx) => {
                 const fontColorHex = colorMap[combo.fontColor.toLowerCase()] || combo.fontColor
                 return (
                   <Box key={idx} sx={{ minHeight: 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -226,16 +226,18 @@ function ColorSchemeGame({
         ) : (
           // Single combination display
           <Box sx={{ mb: 4, textAlign: 'center', minHeight: 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography 
-              variant="h2" 
-              sx={{ 
-                fontWeight: 'bold',
-                color: colorMap[currentQuestion.fontColor.toLowerCase()] || currentQuestion.fontColor,
-                textTransform: 'capitalize'
-              }}
-            >
-              {currentQuestion.word}
-            </Typography>
+            {currentQuestion && 'fontColor' in currentQuestion && (
+              <Typography 
+                variant="h2" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  color: colorMap[currentQuestion.fontColor?.toLowerCase() || ''] || currentQuestion.fontColor,
+                  textTransform: 'capitalize'
+                }}
+              >
+                {currentQuestion.word}
+              </Typography>
+            )}
           </Box>
         )}
 

@@ -22,7 +22,7 @@ interface ViewingEyeToastProps {
   onClose: () => void
 }
 
-function ViewingEyeToast({ targetPlayer, playerInfo, duration, onClose }: ViewingEyeToastProps) {
+function ViewingEyeToast({ targetPlayer: _targetPlayer, playerInfo, duration, onClose }: ViewingEyeToastProps) {
   const theme = useTheme()
   const [timeLeft, setTimeLeft] = useState(duration)
   const [isVisible, setIsVisible] = useState(true)

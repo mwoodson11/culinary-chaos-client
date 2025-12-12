@@ -1,5 +1,5 @@
 import { Box, Typography, Button, TextField, Paper, Alert } from '@mui/material'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 
 interface NumberGuessGameProps {
   onComplete: (points: number) => void

@@ -168,7 +168,6 @@ function GameTimer({ initialTime }: GameTimerProps) {
       // Wait 6 seconds before starting the timer countdown
       delayTimeoutRef.current = setTimeout(() => {
         // Don't start if timer has expired
-        const currentTime = useGameSessionStore.getState().points // Get current time from state
         setTimeLeft((current) => {
           if (current <= 0) {
             return 0

@@ -60,7 +60,7 @@ function PlayerStatus() {
     }
 
     // Listen to inventory updates to refresh player status when items are stolen
-    const handleInventoryUpdate = (data: { username: string; inventory: any[] }) => {
+    const handleInventoryUpdate = (_data: { username: string; inventory: any[] }) => {
       // Refresh player status when any player's inventory changes
       socket.emit(clientEvents.getPlayerStatus, { gameid })
     }

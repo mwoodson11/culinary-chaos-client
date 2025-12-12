@@ -15,8 +15,6 @@ interface TriviaGameProps {
 
 // Generate a trivia question based on difficulty
 const generateTriviaQuestion = (difficulty: number): TriviaQuestion => {
-  const numChoices = difficulty === 100 ? 3 : difficulty === 200 ? 4 : 5
-  
   // Simple trivia questions - in a real app, you'd use an API or larger database
   const questionSets = {
     100: [
