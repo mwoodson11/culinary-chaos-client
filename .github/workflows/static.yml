@@ -54,6 +54,8 @@ jobs:
         env:
           VITE_BASE_PATH: ${{ env.VITE_BASE_PATH }}
           VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL || 'http://localhost:3000' }}
+      - name: Create 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
