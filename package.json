@@ -1,5 +1,6 @@
 {
   "name": "culinary-chaos-client",
+  "homepage": "https://mwoodson11.github.io/culinary-chaos-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
