@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/culinary-chaos-client/' : '/',
+  base: '/culinary-chaos-client/',
   plugins: [react()],
   resolve: {
     alias: {
