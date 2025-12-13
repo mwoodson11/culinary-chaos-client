@@ -434,7 +434,7 @@ socket.on(serverEvents.viewingEyeTargetNotified, () => {
   }
 })
 
-socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any; effect: any; removed?: boolean; blocked?: boolean; blockedBy?: string; stolenPoints?: number; receivedPoints?: number; fromPlayer?: string }) => {
+socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any; effect: any; removed?: boolean; blocked?: boolean; blockedBy?: string; stolenPoints?: number; receivedPoints?: number; fromPlayer?: string; addedByHost?: boolean; removedBy?: string; debuffId?: string; debuffName?: string; expiresAt?: number }) => {
   const state = useGameSessionStore.getState()
   const showToast = useGameSessionStore.getState().showToast
   
@@ -466,21 +466,17 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
   // Note: Points and inventory updates are handled by the server and broadcast via pointsUpdate/inventoryUpdate events
   // The server handles all the actual point/item transfers to ensure consistency
   if (data.targetPlayer === state.username) {
-    // Handle debuff removal (from Debuff Cleanse)
+    // Handle debuff removal
     if (data.removed && !data.debuff) {
       const showToast = useGameSessionStore.getState().showToast
-      if (showToast) {
-        showToast('Your oldest debuff has been removed!', 'success')
-      } else {
-        alert('Your oldest debuff has been removed!')
-      }
       // Remove the specific debuff that was removed, or remove expired debuffs
       const now = Date.now()
       const newActiveDebuffs = { ...state.activeDebuffs }
       
       // If a specific debuff ID was provided, remove that one
-      if ((data as any).removedDebuffId) {
-        delete newActiveDebuffs[(data as any).removedDebuffId]
+      if (data.debuffId || (data as any).removedDebuffId) {
+        const idToRemove = data.debuffId || (data as any).removedDebuffId
+        delete newActiveDebuffs[idToRemove]
       } else {
         // Otherwise, remove expired debuffs (fallback)
         Object.keys(newActiveDebuffs).forEach(debuffId => {
@@ -492,6 +488,18 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
       }
       
       useGameSessionStore.setState({ activeDebuffs: newActiveDebuffs })
+      
+      if (showToast) {
+        let message = 'Your oldest debuff has been removed!'
+        if (data.removedBy === 'Host' && data.debuffName) {
+          message = `Host removed ${data.debuffName} from you`
+        }
+        showToast(message, 'info')
+      } else {
+        alert(data.removedBy === 'Host' && data.debuffName 
+          ? `Host removed ${data.debuffName} from you`
+          : 'Your oldest debuff has been removed!')
+      }
       return
     }
     
@@ -508,7 +516,7 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
     
     // Add debuff to activeDebuffs if it has a duration
     if (data.debuff && data.debuff.duration && data.debuff.duration > 0) {
-      const expiresAt = Date.now() + (data.debuff.duration * 1000)
+      const expiresAt = data.expiresAt || (Date.now() + (data.debuff.duration * 1000))
       const newActiveDebuffs = { ...state.activeDebuffs, [data.debuff.id]: { item: data.debuff, expiresAt } }
       useGameSessionStore.setState({ activeDebuffs: newActiveDebuffs })
     }
@@ -540,14 +548,28 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
       } else {
         alert(`Solar Flare! You cannot see the Recipe Tab for 3 minutes.`)
       }
-    } else if (data.debuff && data.debuff.id && data.debuff.id.startsWith('custom_')) {
-      // Custom debuff - show name and effect
-      const debuffName = data.debuff.name || 'Custom Debuff'
+    } else if (data.debuff && data.debuff.id) {
+      // Handle host-added debuff or custom debuff
+      const debuffName = data.debuff.name || 'Debuff'
       const debuffEffect = data.debuff.effect
-      // Format message: "You've been affected with <name>\n\nEffect: <effect>"
-      const message = debuffEffect 
-        ? `You've been affected with ${debuffName}\n\nEffect: ${debuffEffect}`
-        : `You've been affected with ${debuffName}`
+      
+      let message: string
+      if (data.addedByHost) {
+        // Host-added debuff notification
+        message = `Host added ${debuffName} to you`
+      } else if (data.debuff.id.startsWith('custom_')) {
+        // Custom debuff - show name and effect
+        message = debuffEffect 
+          ? `You've been affected with ${debuffName}\n\nEffect: ${debuffEffect}`
+          : `You've been affected with ${debuffName}`
+      } else {
+        // Default debuff notification
+        message = `You've been affected with ${debuffName}`
+        if (debuffEffect) {
+          message += `\n\nEffect: ${debuffEffect}`
+        }
+      }
+      
       if (showToast) {
         showToast(message, 'warning')
       } else {
@@ -571,29 +593,36 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
 })
 
 // Handle buff applied/removed events
-socket.on(serverEvents.buffApplied, (data: { targetPlayer: string; buff: any; effect?: any; removed?: boolean; removedBy?: string }) => {
+socket.on(serverEvents.buffApplied, (data: { targetPlayer: string; buff: any; effect?: any; removed?: boolean; removedBy?: string; addedByHost?: boolean; buffId?: string; buffName?: string; expiresAt?: number }) => {
   const state = useGameSessionStore.getState()
   const showToast = useGameSessionStore.getState().showToast
   
   // If this player is the target
   if (data.targetPlayer === state.username) {
-    // Handle buff removal (e.g., Debuff Reflect consumed)
+    // Handle buff removal
     if (data.removed && !data.buff) {
       // Clean up expired buffs
       const now = Date.now()
       const newActiveBuffs = { ...state.activeBuffs }
-      Object.keys(newActiveBuffs).forEach(buffId => {
-        const buff = newActiveBuffs[buffId]
-        if (buff.expiresAt <= now) {
-          delete newActiveBuffs[buffId]
-        }
-      })
+      if (data.buffId) {
+        delete newActiveBuffs[data.buffId]
+      } else {
+        Object.keys(newActiveBuffs).forEach(buffId => {
+          const buff = newActiveBuffs[buffId]
+          if (buff.expiresAt <= now) {
+            delete newActiveBuffs[buffId]
+          }
+        })
+      }
       useGameSessionStore.setState({ activeBuffs: newActiveBuffs })
       
       if (showToast) {
-        const message = data.removedBy === 'Debuff Reflect consumed' 
-          ? 'Debuff Reflect was consumed after reflecting a debuff!'
-          : 'A buff has been removed!'
+        let message = 'A buff has been removed!'
+        if (data.removedBy === 'Host' && data.buffName) {
+          message = `Host removed ${data.buffName} from you`
+        } else if (data.removedBy === 'Debuff Reflect consumed') {
+          message = 'Debuff Reflect was consumed after reflecting a debuff!'
+        }
         showToast(message, 'info')
       }
       return
@@ -601,7 +630,7 @@ socket.on(serverEvents.buffApplied, (data: { targetPlayer: string; buff: any; ef
     
     // Add buff to activeBuffs if it has a duration
     if (data.buff && data.buff.duration && data.buff.duration > 0) {
-      const expiresAt = Date.now() + (data.buff.duration * 1000)
+      const expiresAt = data.expiresAt || (Date.now() + (data.buff.duration * 1000))
       const newActiveBuffs = { ...state.activeBuffs, [data.buff.id]: { item: data.buff, expiresAt } }
       useGameSessionStore.setState({ activeBuffs: newActiveBuffs })
     }
@@ -610,10 +639,18 @@ socket.on(serverEvents.buffApplied, (data: { targetPlayer: string; buff: any; ef
     if (data.buff && data.buff.id) {
       const buffName = data.buff.name || 'Buff'
       const buffEffect = data.buff.effect
-      // Format message: "You've activated <name>\n\nEffect: <effect>"
-      const message = buffEffect 
-        ? `You've activated ${buffName}\n\nEffect: ${buffEffect}`
-        : `You've activated ${buffName}`
+      let message: string
+      
+      if (data.addedByHost) {
+        // Host-added buff notification
+        message = `Host added ${buffName} to you`
+      } else {
+        // Regular buff activation
+        message = buffEffect 
+          ? `You've activated ${buffName}\n\nEffect: ${buffEffect}`
+          : `You've activated ${buffName}`
+      }
+      
       if (showToast) {
         showToast(message, 'success')
       } else {

@@ -80,5 +80,10 @@ export const clientEvents = {
   "endGame": "endGame",
   "submitMathAnswer": "submitMathAnswer",
   "submitReflexPress": "submitReflexPress",
-  "submitColorAnswer": "submitColorAnswer"
+  "submitColorAnswer": "submitColorAnswer",
+  "updateStoreQuantities": "updateStoreQuantities",
+  "hostAddBuff": "hostAddBuff",
+  "hostRemoveBuff": "hostRemoveBuff",
+  "hostAddDebuff": "hostAddDebuff",
+  "hostRemoveDebuff": "hostRemoveDebuff"
 }

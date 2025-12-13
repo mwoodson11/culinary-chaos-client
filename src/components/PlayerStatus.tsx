@@ -1,5 +1,5 @@
-import { Typography, Box, Paper, Chip, Divider, IconButton, TextField, Tooltip } from '@mui/material'
-import { useState, useEffect } from 'react'
+import { Typography, Box, Paper, Chip, Divider, IconButton, TextField, Tooltip, Select, MenuItem, FormControl, InputLabel, Button } from '@mui/material'
+import { useState, useEffect, useMemo } from 'react'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import { serverEvents, clientEvents } from '@/types/events'
 import BuildIcon from '@mui/icons-material/Build'
@@ -8,6 +8,8 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
+import storeItemsData from '@/data/storeItems.json'
+import { DEBUFF_STEAL_POINTS, DEBUFF_STEAL_ITEM, BUFF_DEBUFF_CLEANSE } from '@/constants'
 
 interface PlayerData {
   username: string
@@ -19,9 +21,47 @@ interface PlayerData {
 }
 
 function PlayerStatus() {
-  const { socket, gameid, isHost, role } = useGameSessionStore()
+  const { socket, gameid, isHost, role, gameSettings } = useGameSessionStore()
   const [playerData, setPlayerData] = useState<PlayerData[]>([])
   const [pointsInputs, setPointsInputs] = useState<Record<string, string>>({})
+  const [selectedBuffToAdd, setSelectedBuffToAdd] = useState<Record<string, string>>({})
+  const [selectedDebuffToAdd, setSelectedDebuffToAdd] = useState<Record<string, string>>({})
+
+  // Get available buffs (duration-based only, exclude one-time use)
+  const availableBuffs = useMemo(() => {
+    const allBuffs = storeItemsData.buffs as Array<{ id: string; name: string; duration: number; effect?: string }>
+    const customBuffs = (gameSettings?.customItems || []).filter((item: any) => item.type === 'buff' && item.duration > 0)
+    
+    // Filter out one-time use buffs (Debuff Cleanse has duration 0)
+    const durationBuffs = allBuffs.filter(buff => buff.duration > 0 && buff.id !== BUFF_DEBUFF_CLEANSE)
+    
+    // Combine and filter by enabled status
+    const combined = [...durationBuffs, ...customBuffs]
+    return combined.filter(buff => {
+      if (!gameSettings?.storeItems) return true
+      return gameSettings.storeItems[buff.id]?.enabled !== false
+    })
+  }, [gameSettings])
+
+  // Get available debuffs (duration-based only, exclude one-time use)
+  const availableDebuffs = useMemo(() => {
+    const allDebuffs = storeItemsData.debuffs as Array<{ id: string; name: string; duration: number; effect?: string }>
+    const customDebuffs = (gameSettings?.customItems || []).filter((item: any) => item.type === 'debuff' && item.duration > 0)
+    
+    // Filter out one-time use debuffs (Steal Points, Steal Item have duration 0)
+    const durationDebuffs = allDebuffs.filter(debuff => 
+      debuff.duration > 0 && 
+      debuff.id !== DEBUFF_STEAL_POINTS && 
+      debuff.id !== DEBUFF_STEAL_ITEM
+    )
+    
+    // Combine and filter by enabled status
+    const combined = [...durationDebuffs, ...customDebuffs]
+    return combined.filter(debuff => {
+      if (!gameSettings?.storeItems) return true
+      return gameSettings.storeItems[debuff.id]?.enabled !== false
+    })
+  }, [gameSettings])
 
   useEffect(() => {
     // Use role directly instead of isHost() function to avoid dependency issues
@@ -219,11 +259,45 @@ function PlayerStatus() {
             )}
 
             {/* Active Buffs */}
-            {player.activeBuffs.length > 0 && (
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            <Box sx={{ mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
                   Active Buffs:
                 </Typography>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Add Buff</InputLabel>
+                  <Select
+                    value={selectedBuffToAdd[player.username] || ''}
+                    label="Add Buff"
+                    onChange={(e) => {
+                      const buffId = e.target.value
+                      if (buffId) {
+                        const buff = availableBuffs.find(b => b.id === buffId)
+                        if (buff && gameid) {
+                          socket.emit(clientEvents.hostAddBuff, {
+                            gameid,
+                            username: player.username,
+                            buff: {
+                              id: buff.id,
+                              name: buff.name,
+                              duration: buff.duration,
+                              effect: buff.effect
+                            }
+                          })
+                          setSelectedBuffToAdd(prev => ({ ...prev, [player.username]: '' }))
+                        }
+                      }
+                    }}
+                  >
+                    {availableBuffs.map((buff) => (
+                      <MenuItem key={buff.id} value={buff.id}>
+                        {buff.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              {player.activeBuffs.length > 0 ? (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {player.activeBuffs.map((buff) => (
                     <Chip
@@ -233,18 +307,65 @@ function PlayerStatus() {
                       size="small"
                       color="success"
                       variant="filled"
+                      onDelete={() => {
+                        if (gameid) {
+                          socket.emit(clientEvents.hostRemoveBuff, {
+                            gameid,
+                            username: player.username,
+                            buffId: buff.id
+                          })
+                        }
+                      }}
                     />
                   ))}
                 </Box>
-              </Box>
-            )}
+              ) : (
+                <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  No active buffs
+                </Typography>
+              )}
+            </Box>
 
             {/* Active Debuffs */}
-            {player.activeDebuffs.length > 0 && (
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            <Box sx={{ mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
                   Active Debuffs:
                 </Typography>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Add Debuff</InputLabel>
+                  <Select
+                    value={selectedDebuffToAdd[player.username] || ''}
+                    label="Add Debuff"
+                    onChange={(e) => {
+                      const debuffId = e.target.value
+                      if (debuffId) {
+                        const debuff = availableDebuffs.find(d => d.id === debuffId)
+                        if (debuff && gameid) {
+                          socket.emit(clientEvents.hostAddDebuff, {
+                            gameid,
+                            username: player.username,
+                            debuff: {
+                              id: debuff.id,
+                              name: debuff.name,
+                              duration: debuff.duration,
+                              effect: debuff.effect
+                            }
+                          })
+                          setSelectedDebuffToAdd(prev => ({ ...prev, [player.username]: '' }))
+                        }
+                      }
+                    }}
+                  >
+                    {availableDebuffs.map((debuff) => (
+                      <MenuItem key={debuff.id} value={debuff.id}>
+                        {debuff.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              {player.activeDebuffs.length > 0 ? (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {player.activeDebuffs.map((debuff) => (
                     <Chip
@@ -254,11 +375,24 @@ function PlayerStatus() {
                       size="small"
                       color="error"
                       variant="filled"
+                      onDelete={() => {
+                        if (gameid) {
+                          socket.emit(clientEvents.hostRemoveDebuff, {
+                            gameid,
+                            username: player.username,
+                            debuffId: debuff.id
+                          })
+                        }
+                      }}
                     />
                   ))}
                 </Box>
-              </Box>
-            )}
+              ) : (
+                <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  No active debuffs
+                </Typography>
+              )}
+            </Box>
 
             {player.tools.length === 0 && player.activeBuffs.length === 0 && player.activeDebuffs.length === 0 && (
               <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', mb: 1 }}>

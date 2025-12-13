@@ -7,6 +7,7 @@ import HostTimerHeader from '@/components/HostTimerHeader'
 import { RecipeTab, StoreTab, MinigamesTab, ChallengeTab } from '@/components/tabs'
 import EventLog from '@/components/EventLog'
 import PlayerStatus from '@/components/PlayerStatus'
+import StoreManagement from '@/components/StoreManagement'
 import TimeUpScreen from '@/components/TimeUpScreen'
 import ThankYouScreen from '@/components/ThankYouScreen'
 import HostTimeDecisionDialog from '@/components/HostTimeDecisionDialog'
@@ -273,9 +274,11 @@ function GamePlayView() {
                 >
                   <Tab label="Challenge" />
                   <Tab label="Player Status" />
+                  <Tab label="Store Management" />
                 </Tabs>
                 {hostTabValue === 0 && <ChallengeTab />}
                 {hostTabValue === 1 && <PlayerStatus />}
+                {hostTabValue === 2 && <StoreManagement />}
               </Paper>
             </Grid>
             <Grid item xs={12} md={4}>
