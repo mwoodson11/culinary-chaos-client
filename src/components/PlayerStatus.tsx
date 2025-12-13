@@ -1,4 +1,4 @@
-import { Typography, Box, Paper, Chip, Divider, IconButton, TextField, Tooltip, Select, MenuItem, FormControl, InputLabel, Button } from '@mui/material'
+import { Typography, Box, Paper, Chip, Divider, IconButton, TextField, Tooltip, Select, MenuItem, FormControl, InputLabel } from '@mui/material'
 import { useState, useEffect, useMemo } from 'react'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import { serverEvents, clientEvents } from '@/types/events'
