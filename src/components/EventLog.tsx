@@ -5,11 +5,14 @@ import { serverEvents } from '@/types/events'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import BuildIcon from '@mui/icons-material/Build'
+import PersonOffIcon from '@mui/icons-material/PersonOff'
+import PersonAddIcon from '@mui/icons-material/PersonAdd'
+import PersonIcon from '@mui/icons-material/Person'
 
 interface GameEvent {
   id: string
   timestamp: number
-  type: 'minigame' | 'purchase' | 'item_use'
+  type: 'minigame' | 'purchase' | 'item_use' | 'player_disconnect' | 'player_join' | 'player_rejoin' | 'host_action'
   player: string
   message: string
   details?: any
@@ -39,6 +42,14 @@ function EventLog() {
         return <ShoppingCartIcon fontSize="small" />
       case 'item_use':
         return <BuildIcon fontSize="small" />
+      case 'player_disconnect':
+        return <PersonOffIcon fontSize="small" />
+      case 'player_join':
+        return <PersonAddIcon fontSize="small" />
+      case 'player_rejoin':
+        return <PersonIcon fontSize="small" />
+      case 'host_action':
+        return <BuildIcon fontSize="small" />
       default:
         return <BuildIcon fontSize="small" />
     }
@@ -52,6 +63,14 @@ function EventLog() {
         return 'success'
       case 'item_use':
         return 'warning'
+      case 'player_disconnect':
+        return 'error'
+      case 'player_join':
+        return 'success'
+      case 'player_rejoin':
+        return 'info'
+      case 'host_action':
+        return 'info'
       default:
         return 'default'
     }

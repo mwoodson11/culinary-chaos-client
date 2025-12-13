@@ -19,8 +19,8 @@ interface Minigame {
 const MINIGAME_COOLDOWN_SECONDS = 120 // 2 minutes
 
 function MinigamesTab() {
-  const { showToast, ToastContainer } = useToast()
-  const { addPoints, activeBuffs, socket, username, gameid } = useGameSessionStore()
+  const { ToastContainer } = useToast() // Keep ToastContainer for rendering, but use store's showToast
+  const { addPoints, activeBuffs, socket, username, gameid, showToast } = useGameSessionStore()
   const [activeGame, setActiveGame] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState(0)
   const [cooldownRemaining, setCooldownRemaining] = useState<Record<string, number>>({})
@@ -322,32 +322,35 @@ function MinigamesTab() {
     
     // Only show toast for Trivia if they earned points (got it correct)
     // For other games, always show toast
-    if (game.id === '5') {
-      // Trivia: Only show toast if they got points (correct answer)
-      if (finalReward > 0) {
-        showToast(`Congratulations! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
-      }
-      // If they got 0 points, the TriviaGame component already shows the feedback, so no toast needed
-    } else {
-      // Other games: Always show toast
-      if (game.id === '2') {
-        // Memory Match: Different messages for win vs loss
-        if (matchesFound === 8) {
-          // Player won - show win message with points
-          showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
-        } else {
-          // Player lost - show try again message
-          showToast('Try again later', 'info')
+    // Use store's showToast (same instance used by debuff/buff toasts) to prevent flickering
+    if (showToast) {
+      if (game.id === '5') {
+        // Trivia: Only show toast if they got points (correct answer)
+        if (finalReward > 0) {
+          showToast(`Congratulations! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
         }
+        // If they got 0 points, the TriviaGame component already shows the feedback, so no toast needed
       } else {
-        // Other games: Standard toast
-        if (game.id === '1') {
-          // Quick Click: Show win message with points earned
-          showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+        // Other games: Always show toast
+        if (game.id === '2') {
+          // Memory Match: Different messages for win vs loss
+          if (matchesFound === 8) {
+            // Player won - show win message with points
+            showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+          } else {
+            // Player lost - show try again message
+            showToast('Try again later', 'info')
+          }
         } else {
           // Other games: Standard toast
-          let resultMessage = ''
-          showToast(`Congratulations! You earned ${finalReward} points!${resultMessage}${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+          if (game.id === '1') {
+            // Quick Click: Show win message with points earned
+            showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+          } else {
+            // Other games: Standard toast
+            let resultMessage = ''
+            showToast(`Congratulations! You earned ${finalReward} points!${resultMessage}${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+          }
         }
       }
     }

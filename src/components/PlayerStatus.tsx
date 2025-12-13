@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import { serverEvents, clientEvents } from '@/types/events'
 import BuildIcon from '@mui/icons-material/Build'
+import LocalDiningIcon from '@mui/icons-material/LocalDining'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import AddIcon from '@mui/icons-material/Add'
@@ -12,6 +13,7 @@ interface PlayerData {
   username: string
   points: number
   tools: any[]
+  ingredients: any[]
   activeBuffs: any[]
   activeDebuffs: any[]
 }
@@ -239,7 +241,7 @@ function PlayerStatus() {
 
             {/* Active Debuffs */}
             {player.activeDebuffs.length > 0 && (
-              <Box>
+              <Box sx={{ mb: 1 }}>
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                   Active Debuffs:
                 </Typography>
@@ -259,9 +261,30 @@ function PlayerStatus() {
             )}
 
             {player.tools.length === 0 && player.activeBuffs.length === 0 && player.activeDebuffs.length === 0 && (
-              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', mb: 1 }}>
                 No tools or active effects
               </Typography>
+            )}
+
+            {/* Ingredients */}
+            {player.ingredients && player.ingredients.length > 0 && (
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                  Ingredients:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {player.ingredients.map((ingredient) => (
+                    <Chip
+                      key={ingredient.id}
+                      icon={<LocalDiningIcon />}
+                      label={ingredient.name}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+              </Box>
             )}
 
             <Divider sx={{ mt: 2 }} />

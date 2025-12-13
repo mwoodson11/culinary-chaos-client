@@ -2,8 +2,8 @@ import { Container, Typography, Paper, Grid, Box, Tabs, Tab, Button } from '@mui
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
-import GameTimer from '@/components/GameTimer'
 import PlayerInfoHeader from '@/components/PlayerInfoHeader'
+import HostTimerHeader from '@/components/HostTimerHeader'
 import { RecipeTab, StoreTab, MinigamesTab, ChallengeTab } from '@/components/tabs'
 import EventLog from '@/components/EventLog'
 import PlayerStatus from '@/components/PlayerStatus'
@@ -21,6 +21,7 @@ function GamePlayView() {
   const { isHost, players, playerPoints, username, socket, gameid, activeDebuffs } = useGameSessionStore()
   const { showToast, ToastContainer } = useToast()
   const [tabValue, setTabValue] = useState(0)
+  const [hostTabValue, setHostTabValue] = useState(0) // Separate tab state for host
   const [timerExpired, setTimerExpired] = useState(false)
   const [gameEnded, setGameEnded] = useState(false)
   const [showHostDialog, setShowHostDialog] = useState(false)
@@ -232,6 +233,7 @@ function GamePlayView() {
         onClose={() => setShowHostDialog(false)}
       />
       {!isHost() && <PlayerInfoHeader />}
+      {isHost() && <HostTimerHeader />}
       <Container maxWidth="xl" sx={{ py: 4, flex: 1, mt: !isHost() ? 0 : 0 }}>
         <Grid container spacing={3}>
         {/* Host View */}
@@ -256,15 +258,28 @@ function GamePlayView() {
                     End Game
                   </Button>
                 </Box>
-                <ChallengeTab />
+                <Tabs 
+                  value={hostTabValue} 
+                  onChange={(_event, newValue) => setHostTabValue(newValue)}
+                  sx={{ 
+                    mb: 3,
+                    '& .MuiTabs-scrollButtons.Mui-disabled': {
+                      opacity: 0.3
+                    }
+                  }}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  allowScrollButtonsMobile
+                >
+                  <Tab label="Challenge" />
+                  <Tab label="Player Status" />
+                </Tabs>
+                {hostTabValue === 0 && <ChallengeTab />}
+                {hostTabValue === 1 && <PlayerStatus />}
               </Paper>
             </Grid>
             <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <GameTimer />
-                <PlayerStatus />
-                <EventLog />
-              </Box>
+              <EventLog />
             </Grid>
           </>
         )}
