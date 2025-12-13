@@ -231,15 +231,9 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
         const newBuffs = { ...state.activeBuffs, [item.id]: { item, expiresAt } }
         set({ activeBuffs: newBuffs })
       }
-    } else if (item.type === ITEM_TYPE_DEBUFF && targetPlayer) {
-      // Apply debuff to target player
-      get().socket.emit(clientEvents.applyDebuff, {
-        gameid: state.gameid,
-        targetPlayer,
-        debuff: serializableItem,
-        username: state.username
-      })
     }
+    // Note: For debuffs, we only emit useItem - the server handles debuff application
+    // We don't call applyDebuff here to avoid duplicate notifications
 
     // Emit item use event
     get().socket.emit(clientEvents.useItem, {
@@ -480,15 +474,23 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
       } else {
         alert('Your oldest debuff has been removed!')
       }
-      // Remove expired debuffs from activeDebuffs
+      // Remove the specific debuff that was removed, or remove expired debuffs
       const now = Date.now()
       const newActiveDebuffs = { ...state.activeDebuffs }
-      Object.keys(newActiveDebuffs).forEach(debuffId => {
-        const debuff = newActiveDebuffs[debuffId]
-        if (debuff.expiresAt <= now) {
-          delete newActiveDebuffs[debuffId]
-        }
-      })
+      
+      // If a specific debuff ID was provided, remove that one
+      if ((data as any).removedDebuffId) {
+        delete newActiveDebuffs[(data as any).removedDebuffId]
+      } else {
+        // Otherwise, remove expired debuffs (fallback)
+        Object.keys(newActiveDebuffs).forEach(debuffId => {
+          const debuff = newActiveDebuffs[debuffId]
+          if (debuff.expiresAt <= now) {
+            delete newActiveDebuffs[debuffId]
+          }
+        })
+      }
+      
       useGameSessionStore.setState({ activeDebuffs: newActiveDebuffs })
       return
     }
@@ -537,6 +539,19 @@ socket.on(serverEvents.debuffApplied, (data: { targetPlayer: string; debuff: any
         showToast(`Solar Flare! You cannot see the Recipe Tab for 3 minutes.`, 'warning')
       } else {
         alert(`Solar Flare! You cannot see the Recipe Tab for 3 minutes.`)
+      }
+    } else if (data.debuff && data.debuff.id && data.debuff.id.startsWith('custom_')) {
+      // Custom debuff - show name and effect
+      const debuffName = data.debuff.name || 'Custom Debuff'
+      const debuffEffect = data.debuff.effect
+      // Format message: "You've been affected with <name>\n\nEffect: <effect>"
+      const message = debuffEffect 
+        ? `You've been affected with ${debuffName}\n\nEffect: ${debuffEffect}`
+        : `You've been affected with ${debuffName}`
+      if (showToast) {
+        showToast(message, 'warning')
+      } else {
+        alert(message)
       }
     }
   }
@@ -589,6 +604,21 @@ socket.on(serverEvents.buffApplied, (data: { targetPlayer: string; buff: any; ef
       const expiresAt = Date.now() + (data.buff.duration * 1000)
       const newActiveBuffs = { ...state.activeBuffs, [data.buff.id]: { item: data.buff, expiresAt } }
       useGameSessionStore.setState({ activeBuffs: newActiveBuffs })
+    }
+    
+    // Show notification for all buffs (both default and custom)
+    if (data.buff && data.buff.id) {
+      const buffName = data.buff.name || 'Buff'
+      const buffEffect = data.buff.effect
+      // Format message: "You've activated <name>\n\nEffect: <effect>"
+      const message = buffEffect 
+        ? `You've activated ${buffName}\n\nEffect: ${buffEffect}`
+        : `You've activated ${buffName}`
+      if (showToast) {
+        showToast(message, 'success')
+      } else {
+        alert(message)
+      }
     }
   }
   

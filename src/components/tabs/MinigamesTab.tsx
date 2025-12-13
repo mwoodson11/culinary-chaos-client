@@ -1,5 +1,5 @@
 import { Typography, Grid, Card, CardContent, CardActions, Button, Box } from '@mui/material'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import { useToast } from '@/hooks/useToast'
 import { clientEvents } from '@/types/events'
@@ -19,7 +19,7 @@ interface Minigame {
 const MINIGAME_COOLDOWN_SECONDS = 120 // 2 minutes
 
 function MinigamesTab() {
-  const { showToast } = useToast()
+  const { showToast, ToastContainer } = useToast()
   const { addPoints, activeBuffs, socket, username, gameid } = useGameSessionStore()
   const [activeGame, setActiveGame] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState(0)
@@ -27,6 +27,7 @@ function MinigamesTab() {
   const [triviaDifficulty, setTriviaDifficulty] = useState<number | null>(null) // 100, 200, or 300
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const finishGameInProgressRef = useRef<boolean>(false) // Track if finishGame is currently executing
 
   // Get last minigame play time from localStorage for a specific game
   const getLastMinigameTime = (gameId: string): number | null => {
@@ -174,6 +175,8 @@ function MinigamesTab() {
       }
     }
 
+    // Clear completion flag when starting a new game
+    finishGameInProgressRef.current = false
     setActiveGame(game.id)
     setTimeLeft(game.duration)
     
@@ -204,16 +207,16 @@ function MinigamesTab() {
     }
   }
 
-  const handleQuickClickComplete = (clicks: number) => {
+  const handleQuickClickComplete = useCallback((clicks: number) => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
     const game = minigames.find(g => g.id === '1')
-    if (game) {
+    if (game && !finishGameInProgressRef.current) {
       finishGame(game, 0, clicks)
     }
-  }
+  }, [])
 
   const handleMemoryMatchComplete = (matches: number) => {
     if (timerRef.current) {
@@ -249,6 +252,12 @@ function MinigamesTab() {
   }
 
   const finishGame = (game: Minigame, matchesFound: number = 0, clicks: number = 0, numberGuessPoints: number = 0, triviaDifficulty: number = 0) => {
+    // Prevent duplicate calls - if finishGame is already executing, return early
+    if (finishGameInProgressRef.current) {
+      return
+    }
+    finishGameInProgressRef.current = true
+    
     // Check if double points buff is active
     const doublePointsBuff = activeBuffs['buff1']
     const hasDoublePoints = doublePointsBuff && doublePointsBuff.expiresAt > Date.now()
@@ -275,7 +284,6 @@ function MinigamesTab() {
     const finalReward = hasDoublePoints ? baseReward * 2 : baseReward
     
     addPoints(finalReward)
-    setActiveGame(null)
     
     // Set cooldown timer for this specific game - store current timestamp
     if (game.id === '5' && triviaDifficulty > 0) {
@@ -322,18 +330,40 @@ function MinigamesTab() {
       // If they got 0 points, the TriviaGame component already shows the feedback, so no toast needed
     } else {
       // Other games: Always show toast
-      let resultMessage = ''
-      if (game.id === '1') {
-        resultMessage = ` You clicked ${clicks} times!`
-      } else if (game.id === '2') {
-        resultMessage = ` You found ${matchesFound} out of 8 matches!`
+      if (game.id === '2') {
+        // Memory Match: Different messages for win vs loss
+        if (matchesFound === 8) {
+          // Player won - show win message with points
+          showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+        } else {
+          // Player lost - show try again message
+          showToast('Try again later', 'info')
+        }
+      } else {
+        // Other games: Standard toast
+        if (game.id === '1') {
+          // Quick Click: Show win message with points earned
+          showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+        } else {
+          // Other games: Standard toast
+          let resultMessage = ''
+          showToast(`Congratulations! You earned ${finalReward} points!${resultMessage}${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+        }
       }
-      showToast(`Congratulations! You earned ${finalReward} points!${resultMessage}${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
     }
+    
+    // Set active game to null after showing notification to allow toast to display
+    setActiveGame(null)
+    
+    // Reset the flag after a delay to allow for legitimate re-completions
+    setTimeout(() => {
+      finishGameInProgressRef.current = false
+    }, 2000)
   }
 
   return (
     <Box>
+      <ToastContainer />
       <Typography variant="h5" gutterBottom>
         Minigames
       </Typography>

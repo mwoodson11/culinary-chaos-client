@@ -1,13 +1,26 @@
-import { Container, Card, CardContent, CardHeader, CardActions, Button, Typography, Divider, List, ListItem, Box } from '@mui/material'
+import { Container, Card, CardContent, CardHeader, CardActions, Button, Typography, Divider, List, ListItem, Box, Dialog, DialogTitle, DialogContent } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { serverEvents, clientEvents } from '@/types/events'
 import { useBeforeUnload } from '@/hooks/useBeforeUnload'
+import RecipeSelector from '@/components/RecipeSelector'
+import GameSettings, { type GameSettings as GameSettingsType } from '@/components/GameSettings'
+
+interface Recipe {
+  id: string
+  name: string
+  image: string
+  ingredients: Array<{ name: string; amount: string }>
+  instructions: string[]
+  timeToBake: number
+}
 
 function LobbyComponent() {
   const navigate = useNavigate()
-  const { gameid, gameType, players, leaveGame, socket, isHost, username } = useGameSessionStore()
+  const { gameid, gameType, players, leaveGame, socket, isHost, username, gameSettings } = useGameSessionStore()
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null)
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false)
 
   // Redirect to home if socket is connected but not connected to a game
   useEffect(() => {
@@ -24,30 +37,25 @@ function LobbyComponent() {
 
   useEffect(() => {
     const handleGameStart = () => {
-      // If we already have a recipe (rejoining), go directly to game play
-      // Otherwise, go to intro (new game start)
-      const currentRecipe = useGameSessionStore.getState().selectedRecipe
       const currentIsHost = useGameSessionStore.getState().isHost()
       
       // Host goes directly to game, players see countdown
       if (currentIsHost) {
-        if (currentRecipe) {
-          navigate('/game/play', { replace: true })
-        } else {
-          navigate('/game/intro')
-        }
+        navigate('/game/play', { replace: true })
       } else {
         // Players see countdown before game starts
         navigate('/game/countdown', { replace: true })
       }
     }
 
-    const handleHostRecipeSelection = () => {
-      // Host is navigating to recipe selection, clients should go to waiting screen
-      // Check isHost inside the handler to get current value
-      const currentIsHost = useGameSessionStore.getState().isHost()
-      if (!currentIsHost) {
-        navigate('/game/intro')
+    const handleHostNavigatingToRules = (data?: { recipe?: any }) => {
+      // Players follow host to rules page
+      if (!isHost()) {
+        // Store recipe if provided
+        if (data?.recipe) {
+          useGameSessionStore.setState({ selectedRecipe: data.recipe })
+        }
+        navigate('/game/instructions')
       }
     }
 
@@ -56,21 +64,40 @@ function LobbyComponent() {
     }
 
     socket.on(serverEvents.gameStart, handleGameStart)
-    socket.on(serverEvents.hostRecipeSelection, handleHostRecipeSelection)
+    socket.on(serverEvents.hostNavigatingToRules, handleHostNavigatingToRules)
     socket.on(serverEvents.error, handleError)
 
     return () => {
       socket.off(serverEvents.gameStart, handleGameStart)
-      socket.off(serverEvents.hostRecipeSelection, handleHostRecipeSelection)
+      socket.off(serverEvents.hostNavigatingToRules, handleHostNavigatingToRules)
       socket.off(serverEvents.error, handleError)
     }
-  }, [navigate, socket])
+  }, [navigate, socket, isHost])
 
   const handleStart = () => {
-    // Emit event to notify clients that host is navigating to recipe selection
-    socket.emit(clientEvents.hostNavigatingToIntro, { gameid })
-    // Navigate to intro screen where host can select recipe and start game
-    navigate('/game/intro')
+    // Save recipe and settings to store before navigating
+    if (selectedRecipe) {
+      useGameSessionStore.setState({ selectedRecipe })
+      // Emit event to notify players that host is navigating to rules, include recipe
+      socket.emit(clientEvents.hostNavigatingToRules, { gameid, recipe: selectedRecipe })
+    } else {
+      // Emit event even without recipe (shouldn't happen, but safety)
+      socket.emit(clientEvents.hostNavigatingToRules, { gameid })
+    }
+    // Navigate to rules page
+    navigate('/game/instructions')
+  }
+
+  const handleRecipeSelect = (recipe: Recipe) => {
+    setSelectedRecipe(recipe)
+    // Open settings dialog after recipe selection
+    setShowSettingsDialog(true)
+  }
+
+  const handleSettingsSave = (settings: GameSettingsType) => {
+    // Update gameSettings in store
+    useGameSessionStore.setState({ gameSettings: settings })
+    setShowSettingsDialog(false)
   }
 
   const handleLeave = () => {
@@ -117,13 +144,35 @@ function LobbyComponent() {
                   </ListItem>
                 )}
               </List>
+              
+              <Divider sx={{ my: 3 }} />
+              
+              <Typography variant="h6" gutterBottom>Recipe Selection</Typography>
+              <Box sx={{ mt: 2 }}>
+                <RecipeSelector 
+                  onSelect={handleRecipeSelect}
+                  selectedRecipe={selectedRecipe}
+                />
+              </Box>
+              
+              {selectedRecipe && (
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => setShowSettingsDialog(true)}
+                  >
+                    Edit Settings
+                  </Button>
+                </Box>
+              )}
             </CardContent>
             <CardActions sx={{ justifyContent: 'space-between' }}>
               <Button 
                 variant="contained" 
                 color="primary" 
                 onClick={handleStart}
-                disabled={players.filter(player => player !== 'Host').length < 2}
+                disabled={players.filter(player => player !== 'Host').length < 2 || !selectedRecipe}
               >
                 Start Game
               </Button>
@@ -135,6 +184,23 @@ function LobbyComponent() {
                 Leave Game
               </Button>
             </CardActions>
+            
+            {/* Settings Dialog */}
+            <Dialog
+              open={showSettingsDialog}
+              onClose={() => setShowSettingsDialog(false)}
+              maxWidth="md"
+              fullWidth
+            >
+              <DialogTitle>Game Settings</DialogTitle>
+              <DialogContent>
+                <GameSettings
+                  onSave={handleSettingsSave}
+                  initialSettings={gameSettings}
+                  selectedRecipe={selectedRecipe}
+                />
+              </DialogContent>
+            </Dialog>
           </Card>
         ) : (
           <Card sx={{ padding: '20px', borderRadius: '10px' }}>

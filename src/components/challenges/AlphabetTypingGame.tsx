@@ -14,21 +14,37 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
   const [input, setInput] = useState('')
   const [startTime, setStartTime] = useState<number | null>(null)
   const [isComplete, setIsComplete] = useState(false)
+  const [elapsedTime, setElapsedTime] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isActive && !startTime && inputRef.current) {
       // Focus input when game becomes active
       inputRef.current.focus()
-      setStartTime(Date.now())
+      const now = Date.now()
+      setStartTime(now)
+      setElapsedTime(0)
     }
   }, [isActive, startTime])
+
+  // Continuous timer update
+  useEffect(() => {
+    if (!isActive || !startTime || isComplete) return
+
+    const interval = setInterval(() => {
+      const elapsed = ((Date.now() - startTime) / 1000)
+      setElapsedTime(elapsed)
+    }, 100) // Update every 100ms for smooth display
+
+    return () => clearInterval(interval)
+  }, [isActive, startTime, isComplete])
 
   useEffect(() => {
     if (input.toLowerCase() === ALPHABET && startTime && !isComplete) {
       const endTime = Date.now()
       const timeInSeconds = (endTime - startTime) / 1000
       setIsComplete(true)
+      setElapsedTime(timeInSeconds) // Set final time
       onComplete(timeInSeconds)
     }
   }, [input, startTime, isComplete, onComplete])
@@ -47,8 +63,8 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
   }
 
   const getTimeElapsed = () => {
-    if (!startTime) return 0
-    return ((Date.now() - startTime) / 1000).toFixed(2)
+    if (!startTime) return '0.00'
+    return elapsedTime.toFixed(2)
   }
 
   const getProgress = () => {
@@ -133,27 +149,58 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Type this:
               </Typography>
-              <Typography
-                variant="h4"
+              <Box
                 sx={{
-                  fontFamily: 'monospace',
-                  letterSpacing: 2,
-                  color: 'text.primary',
-                  mb: 2
+                  width: '100%',
+                  mb: 2,
+                  // Make it scrollable horizontally on mobile if needed, but try to fit on screen
+                  overflowX: { xs: 'auto', sm: 'visible' },
+                  overflowY: 'hidden',
+                  // Ensure it's always visible with proper height
+                  py: 1,
+                  // Smooth scrolling
+                  scrollBehavior: 'smooth',
+                  // Custom scrollbar styling
+                  '&::-webkit-scrollbar': {
+                    height: 6,
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'primary.main',
+                    borderRadius: 2,
+                  },
                 }}
               >
-                {ALPHABET.split('').map((char, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      color: index < input.length ? 'green' : index === input.length ? 'blue' : 'gray',
-                      textDecoration: index < input.length ? 'underline' : 'none'
-                    }}
-                  >
-                    {char}
-                  </span>
-                ))}
-              </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: 'monospace',
+                    // Responsive letter spacing - smaller on mobile
+                    letterSpacing: { xs: 0.5, sm: 1, md: 2 },
+                    color: 'text.primary',
+                    // Responsive font size - much smaller on mobile to fit on screen
+                    fontSize: { xs: '0.9rem', sm: '1.2rem', md: '2rem' },
+                    // Allow wrapping on very small screens, but prefer single line
+                    whiteSpace: { xs: 'normal', sm: 'nowrap' },
+                    // Word break to prevent overflow
+                    wordBreak: { xs: 'break-all', sm: 'normal' },
+                    // Line height for better readability when wrapped
+                    lineHeight: { xs: 1.8, sm: 1.5, md: 1.2 },
+                    // Ensure it doesn't overflow
+                    maxWidth: '100%',
+                  }}
+                >
+                  {ALPHABET.split('').map((char, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        color: index < input.length ? 'green' : index === input.length ? 'blue' : 'gray',
+                        textDecoration: index < input.length ? 'underline' : 'none'
+                      }}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </Typography>
+              </Box>
             </Box>
 
             <TextField

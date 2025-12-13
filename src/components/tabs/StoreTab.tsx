@@ -133,25 +133,31 @@ function StoreTab() {
     }
   }, [gameSettings])
 
+  // Helper to get item duration (from settings or default)
+  const getItemDuration = useMemo(() => {
+    return (itemId: string, defaultDuration?: number): number | undefined => {
+      if (gameSettings?.storeItems?.[itemId]?.duration !== undefined) {
+        return gameSettings.storeItems[itemId].duration
+      }
+      return defaultDuration
+    }
+  }, [gameSettings])
+
   // Helper to check if item is enabled
   const isItemEnabled = useMemo(() => {
     return (itemId: string): boolean => {
-      // If gameSettings is not loaded yet, don't show items (wait for settings)
+      // If gameSettings is not loaded yet, show all items (fallback)
       if (!gameSettings || !gameSettings.storeItems) {
-        return false
+        return true
       }
-      // If item is explicitly in storeItems, check its enabled status
+      // If item is in storeItems, check if it's explicitly enabled
       if (itemId in gameSettings.storeItems) {
         const itemConfig = gameSettings.storeItems[itemId]
-        // If enabled is explicitly false, item is disabled
-        if (itemConfig.enabled === false) {
-          return false
-        }
-        // If enabled is true or undefined (not explicitly set), item is enabled
-        return itemConfig.enabled !== false
+        // Only show if enabled is explicitly true
+        return itemConfig.enabled === true
       }
-      // If item is not in storeItems, it wasn't configured in settings - don't show it
-      // This ensures only items that were explicitly configured (enabled or disabled) are shown
+      // If item is not in storeItems but settings exist, don't show it
+      // This means the item was explicitly disabled/not configured
       return false
     }
   }, [gameSettings])
@@ -167,7 +173,7 @@ function StoreTab() {
       icon: getIcon(item.icon),
       effect: item.effect,
       quantity: item.quantity,
-      duration: item.duration
+      duration: getItemDuration(item.id, item.duration)
     }
   }
 
@@ -206,24 +212,38 @@ function StoreTab() {
   }, [gameSettings, getItemCost, isItemEnabled, gameItems, customItems])
 
   const buffs: StoreItem[] = useMemo(() => {
-    return (storeItemsData.buffs as StoreItemData[])
+    const defaultItems = (storeItemsData.buffs as StoreItemData[])
       .filter(item => isItemEnabled(item.id))
       .map(item => {
         const storeItem = convertToStoreItem(item, ITEM_TYPE_BUFF)
         storeItem.price = getItemCost(item.id, item.cost)
+        storeItem.duration = getItemDuration(item.id, item.duration)
         return storeItem
       })
-  }, [gameSettings, getItemCost, isItemEnabled])
+    
+    const customBuffItems = customItems
+      .filter(item => item.type === ITEM_TYPE_BUFF && isItemEnabled(item.id))
+      .map(item => convertCustomItem(item))
+    
+    return [...defaultItems, ...customBuffItems]
+  }, [gameSettings, getItemCost, getItemDuration, isItemEnabled, customItems])
 
   const debuffs: StoreItem[] = useMemo(() => {
-    return (storeItemsData.debuffs as StoreItemData[])
+    const defaultItems = (storeItemsData.debuffs as StoreItemData[])
       .filter(item => isItemEnabled(item.id))
       .map(item => {
         const storeItem = convertToStoreItem(item, ITEM_TYPE_DEBUFF)
         storeItem.price = getItemCost(item.id, item.cost)
+        storeItem.duration = getItemDuration(item.id, item.duration)
         return storeItem
       })
-  }, [gameSettings, getItemCost, isItemEnabled])
+    
+    const customDebuffItems = customItems
+      .filter(item => item.type === ITEM_TYPE_DEBUFF && isItemEnabled(item.id))
+      .map(item => convertCustomItem(item))
+    
+    return [...defaultItems, ...customDebuffItems]
+  }, [gameSettings, getItemCost, getItemDuration, isItemEnabled, customItems])
 
   const getItemsByCategory = () => {
     switch (categoryTab) {
@@ -293,7 +313,19 @@ function StoreTab() {
         Spend your points on items to enhance your cake or hinder your opponents!
       </Typography>
 
-      <Tabs value={categoryTab} onChange={handleCategoryChange} sx={{ mb: 3 }}>
+      <Tabs 
+        value={categoryTab} 
+        onChange={handleCategoryChange} 
+        sx={{ 
+          mb: 3,
+          '& .MuiTabs-scrollButtons.Mui-disabled': {
+            opacity: 0.3
+          }
+        }}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
+      >
         <Tab label="Ingredients" />
         <Tab label="Tools" />
         <Tab label="Buffs" />
@@ -301,8 +333,8 @@ function StoreTab() {
       </Tabs>
 
       <Grid container spacing={2}>
-        {getItemsByCategory().map((item) => (
-          <Grid item xs={12} sm={6} md={4} key={item.id}>
+        {getItemsByCategory().map((item, index) => (
+          <Grid item xs={12} sm={6} md={4} key={`${item.id}-${index}`}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>

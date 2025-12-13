@@ -14,7 +14,7 @@ import PaletteIcon from '@mui/icons-material/Palette'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import RecipeSelector from '@/components/RecipeSelector'
 import GameSettings, { type GameSettings as GameSettingsType } from '@/components/GameSettings'
-import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent } from '@mui/material'
 
 interface Recipe {
   id: string
@@ -237,21 +237,6 @@ function GameIntroView() {
             selectedRecipe={selectedRecipe}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowSettingsDialog(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              // The save button is inside GameSettings component
-              // We'll handle it through the onSave callback
-              setShowSettingsDialog(false)
-            }}
-          >
-            Done
-          </Button>
-        </DialogActions>
       </Dialog>
     </Container>
   )

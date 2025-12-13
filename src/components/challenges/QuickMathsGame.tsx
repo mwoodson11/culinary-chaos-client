@@ -44,14 +44,14 @@ function QuickMathsGame({
         setInput('')
         waitingForFeedbackRef.current = false // No longer waiting
         
-        // Re-enable after 1 second
+        // Re-enable after 3 seconds
         setTimeout(() => {
           setShowIncorrect(false)
           setIsDisabled(false)
           if (inputRef.current) {
             inputRef.current.focus()
           }
-        }, 1000)
+        }, 3000)
       }
     }
   }, [onIncorrectAnswerRef])
@@ -182,7 +182,7 @@ function QuickMathsGame({
 
         {showIncorrect && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            Incorrect! Try again in 1 second.
+            Incorrect! Try again in 3 seconds.
           </Alert>
         )}
         {showCorrect && (
@@ -191,7 +191,13 @@ function QuickMathsGame({
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2, 
+          alignItems: { xs: 'stretch', sm: 'center' }, 
+          mb: 2 
+        }}>
           <TextField
             inputRef={inputRef}
             fullWidth
@@ -218,7 +224,10 @@ function QuickMathsGame({
             onClick={handleSubmit}
             disabled={isDisabled || !input.trim()}
             size="large"
-            sx={{ minWidth: 120 }}
+            sx={{ 
+              minWidth: { xs: '100%', sm: 120 },
+              width: { xs: '100%', sm: 'auto' }
+            }}
           >
             Submit
           </Button>

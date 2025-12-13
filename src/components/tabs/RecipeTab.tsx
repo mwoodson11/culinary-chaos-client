@@ -36,7 +36,7 @@ function RecipeTab() {
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
         {selectedRecipe.name}
       </Typography>
       

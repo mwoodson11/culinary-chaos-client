@@ -106,7 +106,7 @@ function GameTimer({ initialTime }: GameTimerProps) {
     }
 
     // Host also needs to listen to timerState to sync when time is added
-    const handleTimerState = (data: { timeLeft: number; isPaused: boolean }) => {
+      const handleTimerState = (data: { timeLeft: number; isPaused: boolean }) => {
       const wasExpired = timeLeft <= 0
       setTimeLeft(data.timeLeft)
       setIsPaused(data.isPaused)
@@ -313,10 +313,6 @@ function GameTimer({ initialTime }: GameTimerProps) {
         flexDirection: 'column',
         alignItems: 'center', 
         gap: 1,
-        position: 'fixed',
-        top: 20,
-        right: 20,
-        zIndex: 1000,
         minWidth: 200
       }}
     >
@@ -376,13 +372,15 @@ function GameTimer({ initialTime }: GameTimerProps) {
             }}
           />
           <Tooltip title="Apply custom time adjustment">
-            <IconButton 
-              size="small" 
-              onClick={handleCustomTime}
-              disabled={!timeInput || isNaN(parseInt(timeInput)) || parseInt(timeInput) === 0}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
+            <span>
+              <IconButton 
+                size="small" 
+                onClick={handleCustomTime}
+                disabled={!timeInput || isNaN(parseInt(timeInput)) || parseInt(timeInput) === 0}
+              >
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </span>
           </Tooltip>
         </Box>
       )}

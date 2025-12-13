@@ -43,6 +43,7 @@ interface GameSettings {
       enabled: boolean
       cost?: number // optional override cost
       quantity?: number // optional override quantity (for tools only)
+      duration?: number // optional override duration (for buffs/debuffs only, in seconds)
     }
   }
   customItems: CustomItem[]
@@ -112,6 +113,10 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
     // Initialize all items first (use initialSettings if available, otherwise defaults)
     allItems.forEach(item => {
       const isTool = 'quantity' in item || gameItems.tools.some(t => t.id === item.id)
+      const isBuff = storeItemsData.buffs.some(b => b.id === item.id)
+      const isDebuff = storeItemsData.debuffs.some(d => d.id === item.id)
+      const isBuffOrDebuff = isBuff || isDebuff
+      
       // Use initialSettings if available, otherwise use defaults
       if (initialSettings?.storeItems?.[item.id]) {
         items[item.id] = {
@@ -119,13 +124,17 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
           cost: initialSettings.storeItems[item.id].cost ?? item.cost,
           quantity: isTool && initialSettings.storeItems[item.id].quantity !== undefined 
             ? initialSettings.storeItems[item.id].quantity 
-            : (isTool && 'quantity' in item ? (item as any).quantity : undefined)
+            : (isTool && 'quantity' in item ? (item as any).quantity : undefined),
+          duration: isBuffOrDebuff && initialSettings.storeItems[item.id].duration !== undefined
+            ? initialSettings.storeItems[item.id].duration
+            : (isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined)
         }
       } else {
         items[item.id] = {
           enabled: true,
           cost: item.cost,
-          quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined
+          quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined,
+          duration: isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
         }
       }
     })
@@ -137,15 +146,19 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
           items[item.id] = {
             ...initialSettings.storeItems[item.id],
             cost: initialSettings.storeItems[item.id].cost ?? item.cost,
-            quantity: item.type === 'tool' && initialSettings.storeItems[item.id].quantity !== undefined
-              ? initialSettings.storeItems[item.id].quantity
-              : (item.type === 'tool' ? item.quantity : undefined)
+            quantity: item.type === 'tool' && initialSettings.storeItems[item.id].quantity !== undefined 
+              ? initialSettings.storeItems[item.id].quantity 
+              : (item.type === 'tool' ? item.quantity : undefined),
+            duration: (item.type === 'buff' || item.type === 'debuff') && initialSettings.storeItems[item.id].duration !== undefined
+              ? initialSettings.storeItems[item.id].duration
+              : ((item.type === 'buff' || item.type === 'debuff') ? item.duration : undefined)
           }
         } else {
           items[item.id] = {
             enabled: true,
             cost: item.cost,
-            quantity: item.type === 'tool' ? item.quantity : undefined
+            quantity: item.type === 'tool' ? item.quantity : undefined,
+            duration: (item.type === 'buff' || item.type === 'debuff') ? item.duration : undefined
           }
         }
       })
@@ -278,9 +291,12 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
       // If item exists, toggle its enabled state
       const newEnabled = currentItem ? !currentItem.enabled : false
       
-      // Get the item to preserve cost and quantity
+      // Get the item to preserve cost, quantity, and duration
       const item = getItemById(itemId)
       const isTool = item && ('quantity' in item || gameItems.tools.some(t => t.id === itemId))
+      const isBuff = item && storeItemsData.buffs.some(b => b.id === itemId)
+      const isDebuff = item && storeItemsData.debuffs.some(d => d.id === itemId)
+      const isBuffOrDebuff = isBuff || isDebuff
       
       return {
         ...prev,
@@ -288,7 +304,8 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
           ...(currentItem || {}),
           enabled: newEnabled,
           cost: currentItem?.cost ?? item?.cost,
-          quantity: isTool ? (currentItem?.quantity ?? (item && 'quantity' in item ? (item as any).quantity : undefined)) : undefined
+          quantity: isTool ? (currentItem?.quantity ?? (item && 'quantity' in item ? (item as any).quantity : undefined)) : undefined,
+          duration: isBuffOrDebuff ? (currentItem?.duration ?? (item && 'duration' in item ? (item as any).duration : undefined)) : undefined
         }
       }
     })
@@ -304,19 +321,33 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
     }))
   }
 
-  const handleQuantityChange = (itemId: string, quantity: number) => {
+  const handleQuantityChange = (itemId: string, quantity: number | string) => {
     setStoreItems(prev => ({
       ...prev,
       [itemId]: {
         ...prev[itemId],
-        quantity: quantity > 0 ? quantity : undefined
+        quantity: typeof quantity === 'string' && quantity.trim() === '' 
+          ? undefined 
+          : (typeof quantity === 'number' && quantity > 0 ? quantity : undefined)
+      }
+    }))
+  }
+
+  const handleDurationChange = (itemId: string, duration: number | string) => {
+    setStoreItems(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        duration: typeof duration === 'string' && duration.trim() === '' 
+          ? undefined 
+          : (typeof duration === 'number' && duration >= 0 ? duration : undefined)
       }
     }))
   }
 
   const handleSave = () => {
-    // Ensure ALL default items are included in storeItems (even if not modified)
-    const updatedStoreItems = { ...storeItems }
+    // Build a complete storeItems object with ALL items explicitly included
+    const updatedStoreItems: GameSettings['storeItems'] = {}
     const allItems = [
       ...gameItems.ingredients,
       ...gameItems.tools,
@@ -324,14 +355,39 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
       ...storeItemsData.debuffs
     ]
     
-    // Add any default items that aren't in storeItems yet
+    // First, copy all existing items from current storeItems state (preserves enabled state)
+    Object.keys(storeItems).forEach(itemId => {
+      updatedStoreItems[itemId] = { ...storeItems[itemId] }
+    })
+    
+    // Then, ensure ALL default items are explicitly included with their current state
     allItems.forEach(item => {
-      if (!updatedStoreItems[item.id]) {
-        const isTool = 'quantity' in item || gameItems.tools.some(t => t.id === item.id)
+      const isTool = 'quantity' in item || gameItems.tools.some(t => t.id === item.id)
+      const isIngredient = gameItems.ingredients.some(ing => ing.id === item.id)
+      const isBuff = storeItemsData.buffs.some(b => b.id === item.id)
+      const isDebuff = storeItemsData.debuffs.some(d => d.id === item.id)
+      const isBuffOrDebuff = isBuff || isDebuff
+      
+      if (updatedStoreItems[item.id]) {
+        // Item exists - ensure it has all required properties, preserve enabled state
         updatedStoreItems[item.id] = {
-          enabled: true, // Default to enabled if not configured
+          enabled: updatedStoreItems[item.id].enabled, // Preserve current enabled state
+          cost: updatedStoreItems[item.id].cost ?? item.cost,
+          quantity: isTool 
+            ? (updatedStoreItems[item.id].quantity ?? ('quantity' in item ? (item as any).quantity : undefined))
+            : undefined,
+          duration: isBuffOrDebuff
+            ? (updatedStoreItems[item.id].duration ?? ('duration' in item ? (item as any).duration : undefined))
+            : undefined
+        }
+      } else {
+        // Item not in storeItems - use current state from storeItems if available, otherwise default
+        // This should rarely happen since useEffect initializes all items, but as a safeguard:
+        updatedStoreItems[item.id] = {
+          enabled: isIngredient ? false : true, // Ingredients default to disabled, others to enabled
           cost: item.cost,
-          quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined
+          quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined,
+          duration: isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
         }
       }
     })
@@ -342,7 +398,25 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
         updatedStoreItems[item.id] = {
           enabled: true,
           cost: item.cost,
-          quantity: item.type === 'tool' ? item.quantity : undefined
+          quantity: item.type === 'tool' ? item.quantity : undefined,
+          duration: (item.type === 'buff' || item.type === 'debuff') ? item.duration : undefined
+        }
+      } else {
+        // Ensure custom item has all properties
+        // For quantity: preserve existing value if set, otherwise use item's quantity (which can be undefined for unlimited)
+        updatedStoreItems[item.id] = {
+          ...updatedStoreItems[item.id],
+          cost: updatedStoreItems[item.id].cost ?? item.cost,
+          quantity: item.type === 'tool' 
+            ? (updatedStoreItems[item.id].quantity !== undefined 
+                ? updatedStoreItems[item.id].quantity 
+                : item.quantity) // item.quantity can be undefined for unlimited
+            : undefined,
+          duration: (item.type === 'buff' || item.type === 'debuff')
+            ? (updatedStoreItems[item.id].duration !== undefined
+                ? updatedStoreItems[item.id].duration
+                : item.duration)
+            : undefined
         }
       }
     })
@@ -396,16 +470,25 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
     const item = getItemById(itemId)
     if (!item) return null
 
-    // Check if item is a tool by checking if it has a 'quantity' property or if it's in the tools array
-    const isTool = 'quantity' in item || gameItems.tools.some(t => t.id === itemId)
+    // Check item type first (for custom items)
+    const itemType = (item as any).type
+    // Check if item is a buff/debuff - either from default items or custom items
+    const isBuff = itemType === 'buff' || storeItemsData.buffs.some(b => b.id === itemId)
+    const isDebuff = itemType === 'debuff' || storeItemsData.debuffs.some(d => d.id === itemId)
+    const isBuffOrDebuff = isBuff || isDebuff
+    // Check if item is a tool - only if it's not a buff/debuff
+    const isTool = !isBuffOrDebuff && ('quantity' in item || gameItems.tools.some(t => t.id === itemId) || itemType === 'tool')
     const itemSetting = storeItems[itemId] || { 
       enabled: true, 
       cost: item.cost,
-      quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined
+      quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined,
+      duration: isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
     }
     const displayCost = itemSetting.cost ?? item.cost
     const defaultQuantity = isTool && 'quantity' in item ? (item as any).quantity : undefined
-    const displayQuantity = itemSetting.quantity ?? defaultQuantity ?? 1
+    const displayQuantity = itemSetting.quantity ?? defaultQuantity ?? undefined // undefined means unlimited
+    const defaultDuration = isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
+    const displayDuration = itemSetting.duration ?? defaultDuration ?? undefined
 
     return (
       <Box key={itemId} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, flexWrap: 'wrap' }}>
@@ -434,12 +517,38 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
               <TextField
                 type="number"
                 label="Quantity"
-                value={displayQuantity}
-                onChange={(e) => handleQuantityChange(itemId, parseInt(e.target.value) || 0)}
+                value={displayQuantity ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value.trim()
+                  if (value === '') {
+                    handleQuantityChange(itemId, '')
+                  } else {
+                    const numValue = parseInt(value)
+                    handleQuantityChange(itemId, isNaN(numValue) ? 0 : numValue)
+                  }
+                }}
                 size="small"
                 sx={{ width: 100 }}
                 inputProps={{ min: 1 }}
-                helperText={displayQuantity === 1 ? "1 available" : `${displayQuantity} available`}
+              />
+            )}
+            {isBuffOrDebuff && (
+              <TextField
+                type="number"
+                label="Duration (seconds)"
+                value={displayDuration ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value.trim()
+                  if (value === '') {
+                    handleDurationChange(itemId, '')
+                  } else {
+                    const numValue = parseInt(value)
+                    handleDurationChange(itemId, isNaN(numValue) ? 0 : numValue)
+                  }
+                }}
+                size="small"
+                sx={{ width: 120 }}
+                inputProps={{ min: 0 }}
               />
             )}
           </>
@@ -596,7 +705,8 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
                         [newItem.id]: {
                           enabled: true,
                           cost: newItem.cost,
-                          quantity: newItem.type === 'tool' ? newItem.quantity : undefined
+                          quantity: newItem.type === 'tool' ? newItem.quantity : undefined,
+                          duration: (newItem.type === 'buff' || newItem.type === 'debuff') ? newItem.duration : undefined
                         }
                       })
                     }}
@@ -746,11 +856,41 @@ function AddCustomItemForm({ onAdd }: { onAdd: (item: Omit<CustomItem, 'id'>) =>
               fullWidth
               type="number"
               label="Quantity"
-              value={quantity || ''}
-              onChange={(e) => setQuantity(e.target.value ? parseInt(e.target.value) : undefined)}
+              value={quantity ?? ''}
+              onChange={(e) => {
+                const value = e.target.value.trim()
+                if (value === '') {
+                  setQuantity(undefined)
+                } else {
+                  const numValue = parseInt(value)
+                  setQuantity(isNaN(numValue) ? undefined : numValue)
+                }
+              }}
               size="small"
               inputProps={{ min: 1 }}
               helperText="Leave empty for unlimited"
+            />
+          </Grid>
+        )}
+        {(type === 'buff' || type === 'debuff') && (
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Duration (seconds)"
+              value={duration}
+              onChange={(e) => {
+                const value = e.target.value.trim()
+                if (value === '') {
+                  setDuration(0)
+                } else {
+                  const numValue = parseInt(value)
+                  setDuration(isNaN(numValue) ? 0 : Math.max(0, numValue))
+                }
+              }}
+              size="small"
+              inputProps={{ min: 0 }}
+              helperText="0 = one-time use"
             />
           </Grid>
         )}

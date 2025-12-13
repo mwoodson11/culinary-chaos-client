@@ -7,7 +7,11 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import { HOST_USERNAME, ITEM_TYPE_TOOL, ITEM_TYPE_BUFF, ITEM_TYPE_DEBUFF } from '@/constants'
 
-function Inventory() {
+interface InventoryProps {
+  onItemUsed?: () => void
+}
+
+function Inventory({ onItemUsed }: InventoryProps = {}) {
   const { inventory, players, username, useItem, showToast } = useGameSessionStore()
   const [selectedTarget, setSelectedTarget] = useState<string>('')
 
@@ -49,8 +53,16 @@ function Inventory() {
       }
       useItem(item, selectedTarget)
       setSelectedTarget('')
+      // Close inventory dialog when debuff is used
+      if (onItemUsed) {
+        onItemUsed()
+      }
     } else {
       useItem(item)
+      // Close inventory dialog when buff is used
+      if (onItemUsed && item.type === ITEM_TYPE_BUFF) {
+        onItemUsed()
+      }
     }
   }
 
@@ -110,8 +122,8 @@ function Inventory() {
             Tools ({tools.length})
           </Typography>
           <Grid container spacing={2}>
-            {groupedTools.map(({ item, quantity }) => (
-              <Grid item xs={12} sm={6} md={4} key={item.id}>
+            {groupedTools.map(({ item, quantity }, index) => (
+              <Grid item xs={12} sm={6} md={4} key={`${item.id}-${index}`}>
                 <Card>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
@@ -148,8 +160,8 @@ function Inventory() {
             Buffs ({buffs.length})
           </Typography>
           <Grid container spacing={2}>
-            {groupedBuffs.map(({ item, quantity }) => (
-              <Grid item xs={12} sm={6} md={4} key={item.id}>
+            {groupedBuffs.map(({ item, quantity }, index) => (
+              <Grid item xs={12} sm={6} md={4} key={`${item.id}-${index}`}>
                 <Card>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
@@ -210,8 +222,8 @@ function Inventory() {
             </Select>
           </FormControl>
           <Grid container spacing={2}>
-            {groupedDebuffs.map(({ item, quantity }) => (
-              <Grid item xs={12} sm={6} md={4} key={item.id}>
+            {groupedDebuffs.map(({ item, quantity }, index) => (
+              <Grid item xs={12} sm={6} md={4} key={`${item.id}-${index}`}>
                 <Card>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>

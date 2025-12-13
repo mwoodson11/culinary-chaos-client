@@ -183,13 +183,15 @@ function PlayerStatus() {
                   }}
                 />
                 <Tooltip title="Apply custom amount">
-                  <IconButton 
-                    size="small" 
-                    onClick={handleCustomPoints}
-                    disabled={!pointsInputs[player.username] || isNaN(parseInt(pointsInputs[player.username])) || parseInt(pointsInputs[player.username]) === 0}
-                  >
-                    <AddIcon fontSize="small" />
-                  </IconButton>
+                  <span>
+                    <IconButton 
+                      size="small" 
+                      onClick={handleCustomPoints}
+                      disabled={!pointsInputs[player.username] || isNaN(parseInt(pointsInputs[player.username])) || parseInt(pointsInputs[player.username]) === 0}
+                    >
+                      <AddIcon fontSize="small" />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               </Box>
 

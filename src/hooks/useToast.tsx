@@ -45,7 +45,7 @@ export const useToast = () => {
             onClose={() => removeToast(toast.id)} 
             severity={toast.severity}
             variant="filled"
-            sx={{ width: '100%' }}
+            sx={{ width: '100%', whiteSpace: 'pre-line' }}
           >
             {toast.message}
           </Alert>

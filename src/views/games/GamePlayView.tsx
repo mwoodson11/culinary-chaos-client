@@ -1,24 +1,24 @@
-import { Container, Typography, Paper, Grid, Box, Tabs, Tab } from '@mui/material'
-import { useState, useEffect, useMemo } from 'react'
+import { Container, Typography, Paper, Grid, Box, Tabs, Tab, Button } from '@mui/material'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import GameTimer from '@/components/GameTimer'
+import PlayerInfoHeader from '@/components/PlayerInfoHeader'
 import { RecipeTab, StoreTab, MinigamesTab, ChallengeTab } from '@/components/tabs'
-import Inventory from '@/components/Inventory'
 import EventLog from '@/components/EventLog'
 import PlayerStatus from '@/components/PlayerStatus'
 import TimeUpScreen from '@/components/TimeUpScreen'
 import ThankYouScreen from '@/components/ThankYouScreen'
 import HostTimeDecisionDialog from '@/components/HostTimeDecisionDialog'
 import ViewingEyeToast from '@/components/ViewingEyeToast'
-import { serverEvents } from '@/types/events'
+import { serverEvents, clientEvents } from '@/types/events'
 import { useBeforeUnload } from '@/hooks/useBeforeUnload'
 import { useToast } from '@/hooks/useToast'
 import { DEBUFF_STORE_CLOSED, DEBUFF_SOLAR_FLARE } from '@/constants'
 
 function GamePlayView() {
   const navigate = useNavigate()
-  const { isHost, players, points, playerPoints, username, socket, gameid, activeDebuffs } = useGameSessionStore()
+  const { isHost, players, playerPoints, username, socket, gameid, activeDebuffs } = useGameSessionStore()
   const { showToast, ToastContainer } = useToast()
   const [tabValue, setTabValue] = useState(0)
   const [timerExpired, setTimerExpired] = useState(false)
@@ -113,6 +113,9 @@ function GamePlayView() {
     }
   }, [socket, isHost])
 
+  // Track which challenge IDs have already been notified to prevent duplicate notifications
+  const notifiedChallengeIds = useRef<Set<string>>(new Set())
+
   // Listen for new challenge updates (only for players)
   useEffect(() => {
     if (isHost() || !gameid) return
@@ -120,7 +123,13 @@ function GamePlayView() {
     const handleChallengeUpdate = (challenge: any) => {
       // If a challenge is created and player hasn't viewed it yet, mark as new
       if (challenge && challenge.status === 'waiting' && tabValue !== 3) {
-        setHasNewChallenge(true)
+        // Only notify once per challenge ID
+        if (challenge.id && !notifiedChallengeIds.current.has(challenge.id)) {
+          notifiedChallengeIds.current.add(challenge.id)
+          setHasNewChallenge(true)
+          // Show toast notification for new challenge
+          showToast('A new challenge is available! Check the Challenge tab to join.', 'info')
+        }
       }
     }
 
@@ -129,7 +138,40 @@ function GamePlayView() {
     return () => {
       socket.off(serverEvents.challengeUpdate, handleChallengeUpdate)
     }
-  }, [socket, gameid, isHost, tabValue])
+  }, [socket, gameid, isHost, tabValue, showToast])
+
+  // Listen for challenge completion notifications
+  useEffect(() => {
+    if (!gameid) return
+
+    const handleChallengeComplete = (data: { challengeId: string; winner: string; reward: any }) => {
+      if (!data.winner) return
+
+      // Determine reward points
+      let pointsWon = 0
+      if (data.reward && data.reward.type === 'points') {
+        pointsWon = data.reward.value || 0
+      }
+
+      // Show different message for winner vs other players
+      if (username === data.winner) {
+        // Winner notification
+        const message = pointsWon > 0 
+          ? `Congratulations! You won the challenge and earned ${pointsWon} points!`
+          : `Congratulations! You won the challenge!`
+        showToast(message, 'success')
+      } else {
+        // Other players notification
+        showToast(`${data.winner} won the challenge!`, 'info')
+      }
+    }
+
+    socket.on(serverEvents.challengeComplete, handleChallengeComplete)
+
+    return () => {
+      socket.off(serverEvents.challengeComplete, handleChallengeComplete)
+    }
+  }, [socket, gameid, username, showToast])
 
   // Listen for Viewing Eye player info
   useEffect(() => {
@@ -175,7 +217,7 @@ function GamePlayView() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <ToastContainer />
       {viewingEyeData && (
         <ViewingEyeToast
@@ -189,21 +231,37 @@ function GamePlayView() {
         open={showHostDialog}
         onClose={() => setShowHostDialog(false)}
       />
-      <GameTimer />
-      <Grid container spacing={3}>
+      {!isHost() && <PlayerInfoHeader />}
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1, mt: !isHost() ? 0 : 0 }}>
+        <Grid container spacing={3}>
         {/* Host View */}
         {isHost() && (
           <>
             <Grid item xs={12} md={8}>
               <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h5" gutterBottom>
-                  Host Dashboard
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Host Dashboard
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => {
+                      if (gameid && window.confirm('Are you sure you want to end the game? All players will be disconnected.')) {
+                        socket.emit(clientEvents.endGame, { gameid })
+                      }
+                    }}
+                    sx={{ ml: 2 }}
+                  >
+                    End Game
+                  </Button>
+                </Box>
                 <ChallengeTab />
               </Paper>
             </Grid>
             <Grid item xs={12} md={4}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <GameTimer />
                 <PlayerStatus />
                 <EventLog />
               </Box>
@@ -215,7 +273,19 @@ function GamePlayView() {
         {!isHost() && (
           <Grid item xs={12} md={8}>
             <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-              <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
+              <Tabs 
+                value={tabValue} 
+                onChange={handleTabChange} 
+                sx={{ 
+                  mb: 3,
+                  '& .MuiTabs-scrollButtons.Mui-disabled': {
+                    opacity: 0.3
+                  }
+                }}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+              >
                 <Tab 
                   label="Recipe" 
                   disabled={hasSolarFlare}
@@ -270,41 +340,30 @@ function GamePlayView() {
 
         {/* Sidebar - Common for both host and players */}
         <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Players
-            </Typography>
-            {players
-              .filter(player => player !== 'Host') // Exclude host from display
-              .map((player, index) => (
-                <Box key={index} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body1">
-                    {player} {player === username && '(You)'}
-                  </Typography>
-                  <Typography variant="body1" color="primary" fontWeight="bold">
-                    {playerPoints[player] || 0} pts
-                  </Typography>
-                </Box>
-              ))}
-          </Paper>
-          {!isHost() && (
-            <>
-              <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Your Points
-                </Typography>
-                <Typography variant="h4" color="primary" fontWeight="bold">
-                  {points}
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Inventory />
-              </Paper>
-            </>
+          {/* Only show Players list when Viewing Eye is active (for players) */}
+          {viewingEyeData && !isHost() && (
+            <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Players
+              </Typography>
+              {players
+                .filter(player => player !== 'Host') // Exclude host from display
+                .map((player, index) => (
+                  <Box key={index} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body1">
+                      {player} {player === username && '(You)'}
+                    </Typography>
+                    <Typography variant="body1" color="primary" fontWeight="bold">
+                      {playerPoints[player] || 0} pts
+                    </Typography>
+                  </Box>
+                ))}
+            </Paper>
           )}
         </Grid>
       </Grid>
-    </Container>
+      </Container>
+    </Box>
   )
 }
 
