@@ -23,7 +23,7 @@ function StoreManagement() {
   const [hasChanges, setHasChanges] = useState(false)
 
   // Get items based on game type
-  const isMixingGame = gameType === 'Mixing Game'
+  const isMixingGame = gameType === 'Mixing Game' || gameType === 'Christmas Mix'
   const gameItems = isMixingGame ? storeItemsData.mixing : storeItemsData.baking
 
   // Get custom items from settings

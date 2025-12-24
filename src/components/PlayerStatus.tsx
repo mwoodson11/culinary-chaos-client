@@ -21,11 +21,36 @@ interface PlayerData {
 }
 
 function PlayerStatus() {
-  const { socket, gameid, isHost, role, gameSettings } = useGameSessionStore()
+  const { socket, gameid, isHost, role, gameSettings, gameType } = useGameSessionStore()
   const [playerData, setPlayerData] = useState<PlayerData[]>([])
   const [pointsInputs, setPointsInputs] = useState<Record<string, string>>({})
   const [selectedBuffToAdd, setSelectedBuffToAdd] = useState<Record<string, string>>({})
   const [selectedDebuffToAdd, setSelectedDebuffToAdd] = useState<Record<string, string>>({})
+  
+  // Helper to get ingredient name from ID
+  const getIngredientName = useMemo(() => {
+    const isMixingGame = gameType === 'Mixing Game' || gameType === 'Christmas Mix'
+    const gameItems = isMixingGame ? storeItemsData.mixing : storeItemsData.baking
+    
+    return (ingredientId: string): string => {
+      // Check custom items first
+      if (gameSettings?.customItems) {
+        const customIngredient = gameSettings.customItems.find((item: any) => item.id === ingredientId && item.type === 'ingredient')
+        if (customIngredient) {
+          return customIngredient.name
+        }
+      }
+      
+      // Check default ingredients
+      const defaultIngredient = gameItems.ingredients.find((item: any) => item.id === ingredientId)
+      if (defaultIngredient) {
+        return defaultIngredient.name
+      }
+      
+      // Fallback to ID
+      return ingredientId
+    }
+  }, [gameSettings, gameType])
 
   // Get available buffs (duration-based only, exclude one-time use)
   const availableBuffs = useMemo(() => {
@@ -407,16 +432,23 @@ function PlayerStatus() {
                   Ingredients:
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {player.ingredients.map((ingredient) => (
-                    <Chip
-                      key={ingredient.id}
-                      icon={<LocalDiningIcon />}
-                      label={ingredient.name}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  ))}
+                  {player.ingredients.map((ingredient) => {
+                    // Get ingredient name - if name is the same as ID, look it up
+                    let ingredientName = ingredient.name
+                    if (!ingredientName || ingredientName === ingredient.id) {
+                      ingredientName = getIngredientName(ingredient.id)
+                    }
+                    return (
+                      <Chip
+                        key={ingredient.id}
+                        icon={<LocalDiningIcon />}
+                        label={ingredientName}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    )
+                  })}
                 </Box>
               </Box>
             )}

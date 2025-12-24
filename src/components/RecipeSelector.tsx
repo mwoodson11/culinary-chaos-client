@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import recipesData from '@/data/recipes.json'
 import cocktailsData from '@/data/cocktails.json'
+import christmasRecipesData from '@/data/christmasRecipes.json'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 
@@ -23,8 +24,9 @@ interface RecipeSelectorProps {
 function RecipeSelector({ onSelect, selectedRecipe }: RecipeSelectorProps) {
   const { gameType } = useGameSessionStore()
   const isMixingGame = gameType === 'Mixing Game'
+  const isChristmasMix = gameType === 'Christmas Mix'
   // Load recipes based on game type
-  const allRecipes = (isMixingGame ? cocktailsData : recipesData) as Recipe[]
+  const allRecipes = (isChristmasMix ? christmasRecipesData : (isMixingGame ? cocktailsData : recipesData)) as Recipe[]
   const [localSelected, setLocalSelected] = useState<Recipe | null>(selectedRecipe)
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null)
   
@@ -294,7 +296,7 @@ function RecipeSelector({ onSelect, selectedRecipe }: RecipeSelectorProps) {
                         Common Tools Needed:
                       </Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                        {isMixingGame ? (
+                        {isMixingGame || isChristmasMix ? (
                           <>
                             <Chip label="Cocktail Shaker" size="small" color="primary" variant="outlined" />
                             <Chip label="Bar Spoon" size="small" color="primary" variant="outlined" />

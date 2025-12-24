@@ -1,0 +1,24 @@
+[
+  {
+    "id": "cranberry-peach-vodka",
+    "name": "Cranberry Peach Vodka Cocktail",
+    "image": "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    "ingredients": [
+      { "name": "Vodka", "amount": "2 oz" },
+      { "name": "Cranberry juice", "amount": "2.5-3 oz" },
+      { "name": "Peach schnapps", "amount": "1 oz" },
+      { "name": "Simple syrup", "amount": "1/2 oz (optional, to taste)" },
+      { "name": "Ice", "amount": "As needed" },
+      { "name": "Fresh or frozen cranberries", "amount": "For garnish (optional)" },
+      { "name": "Orange peel or lemon peel", "amount": "For garnish (optional)" },
+      { "name": "Rosemary sprig", "amount": "For garnish (optional)" }
+    ],
+    "instructions": [
+      "Fill a rocks or highball glass with ice.",
+      "Add vodka, cranberry juice, peach schnapps, and simple syrup.",
+      "Stir gently for 10–15 seconds until chilled.",
+      "Garnish and serve."
+    ],
+    "timeToBake": 5
+  }
+]

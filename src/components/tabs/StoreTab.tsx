@@ -84,7 +84,7 @@ const convertToStoreItem = (item: StoreItemData, type: ItemType): StoreItem => {
 
 function StoreTab() {
   const { showToast } = useToast()
-  const { points, subtractPoints, addItemToInventory, storeQuantities, gameSettings, gameType, activeBuffs } = useGameSessionStore()
+  const { points, subtractPoints, addItemToInventory, unlockIngredient, storeQuantities, gameSettings, gameType, activeBuffs, unlockedIngredients } = useGameSessionStore()
   const [categoryTab, setCategoryTab] = useState(0)
   
   // Check for Haggler buff (20% discount)
@@ -102,7 +102,7 @@ function StoreTab() {
   }
   
   // Get items based on game type
-  const isMixingGame = gameType === 'Mixing Game'
+  const isMixingGame = gameType === 'Mixing Game' || gameType === 'Christmas Mix'
   const gameItems = isMixingGame ? storeItemsData.mixing : storeItemsData.baking
   
   // Get custom items from settings
@@ -274,6 +274,31 @@ function StoreTab() {
   }
 
   const handlePurchase = (item: StoreItem) => {
+    // For ingredients, use unlock system
+    if (item.type === ITEM_TYPE_INGREDIENT) {
+      // Check if already unlocked
+      if (unlockedIngredients.includes(item.id)) {
+        showToast(`${item.name} is already unlocked!`, 'info')
+        return
+      }
+
+      // Calculate final price with Haggler discount
+      const finalPrice = getDiscountedPrice(item.price, item.type)
+      
+      if (points >= finalPrice) {
+        subtractPoints(finalPrice)
+        unlockIngredient(item.id, item.name)
+        const discountMsg = hasHaggler && item.price !== finalPrice
+          ? ` (20% discount applied: ${item.price} → ${finalPrice} points)`
+          : ''
+        showToast(`Unlocked ${item.name}${discountMsg}!`, 'success')
+      } else {
+        showToast(`Not enough points! You need ${finalPrice - points} more points.`, 'error')
+      }
+      return
+    }
+
+    // For non-ingredients, use regular purchase system
     // Check if item is sold out
     if (isItemSoldOut(item)) {
       showToast(`${item.name} is sold out!`, 'warning')
@@ -286,7 +311,7 @@ function StoreTab() {
     if (points >= finalPrice) {
       subtractPoints(finalPrice)
       addItemToInventory(item)
-      const discountMsg = hasHaggler && (item.type === ITEM_TYPE_TOOL || item.type === ITEM_TYPE_INGREDIENT) && item.price !== finalPrice
+      const discountMsg = hasHaggler && item.type === ITEM_TYPE_TOOL && item.price !== finalPrice
         ? ` (20% discount applied: ${item.price} → ${finalPrice} points)`
         : ''
       showToast(`Purchased ${item.name}${discountMsg}!`, 'success')
@@ -332,10 +357,25 @@ function StoreTab() {
         <Tab label="Debuffs" />
       </Tabs>
 
-      <Grid container spacing={2}>
-        {getItemsByCategory().map((item, index) => (
-          <Grid item xs={12} sm={6} md={4} key={`${item.id}-${index}`}>
-            <Card>
+      {(() => {
+        const items = getItemsByCategory()
+        
+        // Show message if no items are enabled (only for tools, buffs, and debuffs)
+        if (items.length === 0 && categoryTab !== 0) {
+          return (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary">
+                No items in this category are enabled for this game
+              </Typography>
+            </Box>
+          )
+        }
+        
+        return (
+          <Grid container spacing={2}>
+            {items.map((item, index) => (
+              <Grid item xs={12} sm={6} md={4} key={`${item.id}-${index}`}>
+                <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -394,15 +434,27 @@ function StoreTab() {
                   variant="contained"
                   startIcon={<ShoppingCartIcon />}
                   onClick={() => handlePurchase(item)}
-                  disabled={points < getDiscountedPrice(item.price, item.type) || isItemSoldOut(item)}
+                  disabled={
+                    item.type === ITEM_TYPE_INGREDIENT
+                      ? unlockedIngredients.includes(item.id) || points < getDiscountedPrice(item.price, item.type)
+                      : points < getDiscountedPrice(item.price, item.type) || isItemSoldOut(item)
+                  }
                 >
-                  {isItemSoldOut(item) ? 'Sold Out' : 'Buy'}
+                  {item.type === ITEM_TYPE_INGREDIENT
+                    ? unlockedIngredients.includes(item.id)
+                      ? 'Unlocked'
+                      : 'Unlock'
+                    : isItemSoldOut(item)
+                    ? 'Sold Out'
+                    : 'Buy'}
                 </Button>
               </CardActions>
             </Card>
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
+        )
+      })()}
     </Box>
   )
 }

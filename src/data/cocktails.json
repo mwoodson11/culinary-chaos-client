@@ -5,7 +5,7 @@
     "image": "https://images.unsplash.com/photo-1536935338788-846bb9981813?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
     "ingredients": [
       { "name": "Tequila", "amount": "2 oz" },
-      { "name": "Fresh lime juice", "amount": "1 oz" },
+      { "name": "Lime juice", "amount": "1 oz" },
       { "name": "Triple sec", "amount": "1 oz" },
       { "name": "Simple syrup", "amount": "1/2 oz" },
       { "name": "Ice", "amount": "As needed" },
@@ -30,7 +30,7 @@
     "ingredients": [
       { "name": "White rum", "amount": "2 oz" },
       { "name": "Fresh mint leaves", "amount": "10-12 leaves" },
-      { "name": "Fresh lime juice", "amount": "1 oz" },
+      { "name": "Lime juice", "amount": "1 oz" },
       { "name": "Simple syrup", "amount": "3/4 oz" },
       { "name": "Club soda", "amount": "2-3 oz" },
       { "name": "Ice", "amount": "As needed" },
@@ -77,7 +77,7 @@
       { "name": "Vodka", "amount": "1 1/2 oz" },
       { "name": "Triple sec", "amount": "1 oz" },
       { "name": "Cranberry juice", "amount": "1/2 oz" },
-      { "name": "Fresh lime juice", "amount": "1/2 oz" },
+      { "name": "Lime juice", "amount": "1/2 oz" },
       { "name": "Ice", "amount": "As needed" },
       { "name": "Lime twist", "amount": "1 (for garnish)" }
     ],
@@ -97,7 +97,7 @@
     "image": "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
     "ingredients": [
       { "name": "Bourbon whiskey", "amount": "2 oz" },
-      { "name": "Fresh lemon juice", "amount": "3/4 oz" },
+      { "name": "Lemon juice", "amount": "3/4 oz" },
       { "name": "Simple syrup", "amount": "3/4 oz" },
       { "name": "Egg white", "amount": "1 (optional, for froth)" },
       { "name": "Ice", "amount": "As needed" },

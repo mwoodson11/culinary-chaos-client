@@ -1,5 +1,9 @@
-import { Typography, List, ListItem, ListItemIcon, ListItemText, Box, Divider } from '@mui/material'
+import { Typography, List, ListItem, ListItemIcon, ListItemText, Box, Divider, Button, Paper } from '@mui/material'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
+import { useEffect } from 'react'
+import { clientEvents, serverEvents } from '@/types/events'
+import LockIcon from '@mui/icons-material/Lock'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
 import FlourIcon from '@mui/icons-material/Grain'
 import EggIcon from '@mui/icons-material/Egg'
 import MilkIcon from '@mui/icons-material/WaterDrop'
@@ -21,8 +25,36 @@ const getIngredientIcon = (ingredientName: string) => {
 }
 
 function RecipeTab() {
-  const { selectedRecipe, gameType } = useGameSessionStore()
+  const { selectedRecipe, gameType, socket, gameid, username, points, isHost, recipeUnlocked: storeRecipeUnlocked } = useGameSessionStore()
   const isMixingGame = gameType === 'Mixing Game'
+  const isChristmasMix = gameType === 'Christmas Mix'
+  
+  // Use store value if available, otherwise default based on host status
+  const recipeUnlocked = isHost() || !isChristmasMix ? true : storeRecipeUnlocked
+
+  useEffect(() => {
+    if (!isChristmasMix || isHost()) {
+      // Host always sees the recipe, and non-Christmas Mix games don't need unlock
+      return
+    }
+
+    const handleRecipeUnlocked = (data: { unlocked: boolean }) => {
+      if (data.unlocked) {
+        useGameSessionStore.setState({ recipeUnlocked: true })
+      }
+    }
+
+    socket.on(serverEvents.recipeUnlocked, handleRecipeUnlocked)
+
+    return () => {
+      socket.off(serverEvents.recipeUnlocked, handleRecipeUnlocked)
+    }
+  }, [isChristmasMix, isHost, socket])
+
+  const handlePurchaseRecipe = () => {
+    if (!gameid || !username) return
+    socket.emit(clientEvents.purchaseRecipe, { gameid, username })
+  }
 
   if (!selectedRecipe) {
     return (
@@ -30,6 +62,39 @@ function RecipeTab() {
         <Typography variant="h6" color="text.secondary">
           Waiting for recipe selection...
         </Typography>
+      </Box>
+    )
+  }
+
+  // For Christmas Mix, show unlock option if not unlocked (and not host)
+  if (isChristmasMix && !recipeUnlocked && !isHost()) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, maxWidth: 500, mx: 'auto' }}>
+          <LockIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h5" gutterBottom>
+            Recipe Locked
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Unlock the recipe to see ingredients, instructions, and reference image.
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handlePurchaseRecipe}
+            disabled={points < 100}
+            startIcon={<LockOpenIcon />}
+            sx={{ minWidth: 200 }}
+          >
+            Unlock Recipe (100 points)
+          </Button>
+          {points < 100 && (
+            <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+              You need {100 - points} more points to unlock the recipe.
+            </Typography>
+          )}
+        </Paper>
       </Box>
     )
   }
@@ -97,7 +162,7 @@ function RecipeTab() {
 
       <Box sx={{ mt: 4, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
         <Typography variant="body2" color="info.contrastText">
-          Remember: You have {selectedRecipe.timeToBake} minutes to complete your {isMixingGame ? 'cocktail' : 'cake'}. Focus on taste, presentation, and creativity!
+          Remember: You have {selectedRecipe.timeToBake} minutes to complete your {isMixingGame || isChristmasMix ? 'cocktail' : 'cake'}. Focus on taste, presentation, and creativity!
         </Typography>
       </Box>
     </Box>

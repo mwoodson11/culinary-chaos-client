@@ -16,7 +16,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 function GameInstructionsView() {
   const navigate = useNavigate()
   const { gameType, gameSettings, isHost, socket, gameid, selectedRecipe } = useGameSessionStore()
-  const isMixingGame = gameType === 'Mixing Game'
+  const isMixingGame = gameType === 'Mixing Game' || gameType === 'Christmas Mix'
   const [showRecipeDisplay, setShowRecipeDisplay] = useState(false)
 
   useEffect(() => {

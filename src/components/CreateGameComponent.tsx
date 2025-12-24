@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { serverEvents } from '@/types/events'
 import { useNavigate, Link } from 'react-router-dom'
 
-const gameTypes = ['Baking Game', 'Mixing Game']
+const gameTypes = ['Baking Game', 'Mixing Game', 'Christmas Mix']
 
 function CreateGameComponent() {
   const [selectedGameType, setSelectedGameType] = useState<string | null>(null)

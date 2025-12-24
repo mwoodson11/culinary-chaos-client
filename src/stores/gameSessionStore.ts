@@ -27,6 +27,8 @@ interface GameSessionState {
   selectedRecipe: any | null
   storeQuantities: Record<string, number> // Map of item ID to remaining quantity
   gameSettings: any | null // Game settings configured by host
+  recipeUnlocked: boolean // For Christmas Mix - tracks if player has unlocked the recipe
+  unlockedIngredients: string[] // List of ingredient IDs that the player has unlocked
   joinGame: (request: IClient.IJoinGame) => void
   createGame: (request: IClient.ICreateGame) => void
   startGame: () => void
@@ -37,6 +39,7 @@ interface GameSessionState {
   subtractPoints: (amount: number) => void
   addItemToInventory: (item: StoreItem) => void
   removeItemFromInventory: (itemId: string) => void
+  unlockIngredient: (itemId: string, itemName: string) => void
   useItem: (item: StoreItem, targetPlayer?: string) => void
   rejoinGame: (request: IClient.IRejoinGame) => void
   saveSession: () => void
@@ -68,6 +71,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   selectedRecipe: null,
   storeQuantities: {},
   gameSettings: null,
+  recipeUnlocked: false,
+  unlockedIngredients: [],
 
   joinGame: (request: IClient.IJoinGame) => {
     console.log("Join Game", request);
@@ -116,12 +121,14 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       gameType: '',
       username: '',
       role: null,
-      points: 0,
-      playerPoints: {},
-      inventory: [],
-      activeBuffs: {},
-      activeDebuffs: {},
-      selectedRecipe: null
+  points: 0,
+  playerPoints: {},
+  inventory: [],
+  activeBuffs: {},
+  activeDebuffs: {},
+  selectedRecipe: null,
+  recipeUnlocked: false,
+  unlockedIngredients: []
     })
     // Clear session from localStorage when resetting
     localStorage.removeItem('gameSession')
@@ -173,6 +180,28 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       gameid: get().gameid,
       inventory: serializableInventory,
       purchasedItem: serializablePurchasedItem
+    })
+  },
+
+  unlockIngredient: (itemId: string, itemName: string) => {
+    const currentUnlocked = get().unlockedIngredients
+    // Don't unlock if already unlocked
+    if (currentUnlocked.includes(itemId)) {
+      return
+    }
+    const newUnlocked = [...currentUnlocked, itemId]
+    set({ unlockedIngredients: newUnlocked })
+    
+    // Emit unlock to server with ingredient name
+    get().socket.emit(clientEvents.inventoryUpdate, {
+      username: get().username,
+      gameid: get().gameid,
+      inventory: get().inventory.map(item => {
+        const { icon, ...serializableItem } = item
+        return serializableItem
+      }),
+      unlockedIngredient: itemId,
+      unlockedIngredientName: itemName
     })
   },
 
@@ -341,6 +370,8 @@ socket.on(serverEvents.rejoinSuccess, (data: {
   gameType: string;
   recipe?: any;
   gameStarted?: boolean;
+  unlockedRecipe?: boolean;
+  unlockedIngredients?: string[];
 }) => {
   // Add icons to inventory items
   const inventoryWithIcons = addIconsToInventory(data.inventory)
@@ -352,7 +383,9 @@ socket.on(serverEvents.rejoinSuccess, (data: {
     role: data.role,
     players: data.players,
     gameType: data.gameType,
-    selectedRecipe: data.recipe || null
+    selectedRecipe: data.recipe || null,
+    recipeUnlocked: data.unlockedRecipe ?? (data.role === 'host' && data.gameType === 'Christmas Mix'),
+    unlockedIngredients: data.unlockedIngredients || []
   })
   useGameSessionStore.getState().saveSession()
 })
@@ -360,6 +393,13 @@ socket.on(serverEvents.rejoinSuccess, (data: {
 socket.on(serverEvents.error, (message: string) => {
   console.log("Error:", message);
   const state = useGameSessionStore.getState()
+  
+  // Don't kick players out for "already unlocked" errors - just handle it gracefully
+  if (message.includes('already unlocked')) {
+    // Recipe is already unlocked, just update the state
+    useGameSessionStore.setState({ recipeUnlocked: true })
+    return
+  }
   
   // Handle sold out errors - rollback the purchase
   if (message.includes('sold out') || message.includes('soldout')) {

@@ -10,14 +10,14 @@ interface TriviaQuestion {
 
 interface TriviaGameProps {
   onComplete: (points: number, difficulty: number) => void
-  difficulty: number // 100, 200, or 300
+  difficulty: number // 50, 100, or 200
 }
 
 // Generate a trivia question based on difficulty
 const generateTriviaQuestion = (difficulty: number): TriviaQuestion => {
   // Simple trivia questions - in a real app, you'd use an API or larger database
   const questionSets = {
-    100: [
+    50: [
       { q: "What is the capital of France?", choices: ["London", "Berlin", "Paris"], correct: 2 },
       { q: "How many continents are there?", choices: ["5", "6", "7"], correct: 2 },
       { q: "What is 2 + 2?", choices: ["3", "4", "5"], correct: 1 },
@@ -29,7 +29,7 @@ const generateTriviaQuestion = (difficulty: number): TriviaQuestion => {
       { q: "What is the freezing point of water in Celsius?", choices: ["-1°C", "0°C", "1°C"], correct: 1 },
       { q: "How many sides does a triangle have?", choices: ["2", "3", "4"], correct: 1 }
     ],
-    200: [
+    100: [
       { q: "Who wrote 'Romeo and Juliet'?", choices: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"], correct: 1 },
       { q: "What is the chemical symbol for gold?", choices: ["Go", "Gd", "Au", "Ag"], correct: 2 },
       { q: "In which year did World War II end?", choices: ["1943", "1944", "1945", "1946"], correct: 2 },
@@ -41,7 +41,7 @@ const generateTriviaQuestion = (difficulty: number): TriviaQuestion => {
       { q: "What is the longest river in the world?", choices: ["Amazon", "Nile", "Mississippi", "Yangtze"], correct: 1 },
       { q: "In which continent is the Sahara Desert located?", choices: ["Asia", "Africa", "Australia", "South America"], correct: 1 }
     ],
-    300: [
+    200: [
       { q: "What is the molecular formula for water?", choices: ["H2O", "CO2", "NaCl", "O2", "H2SO4"], correct: 0 },
       { q: "Who discovered penicillin?", choices: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Robert Koch", "Joseph Lister"], correct: 1 },
       { q: "What is the approximate age of the universe in billions of years?", choices: ["10.5", "12.5", "13.8", "15.2", "18.5"], correct: 2 },

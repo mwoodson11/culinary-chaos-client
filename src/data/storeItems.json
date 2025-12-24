@@ -22,19 +22,19 @@
       {
         "id": "baking_ingredient4",
         "name": "Eggs",
-        "cost": 12,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "baking_ingredient5",
         "name": "Milk",
-        "cost": 8,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "baking_ingredient6",
         "name": "Vanilla Extract",
-        "cost": 25,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -46,7 +46,7 @@
       {
         "id": "baking_ingredient8",
         "name": "Baking Powder",
-        "cost": 18,
+        "cost": 20,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -64,7 +64,7 @@
       {
         "id": "baking_ingredient11",
         "name": "Cocoa Powder",
-        "cost": 28,
+        "cost": 30,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -76,7 +76,7 @@
       {
         "id": "baking_ingredient13",
         "name": "Vegetable Oil",
-        "cost": 12,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -88,13 +88,13 @@
       {
         "id": "baking_ingredient15",
         "name": "Lemon Juice",
-        "cost": 8,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "baking_ingredient16",
         "name": "Lemon Zest",
-        "cost": 6,
+        "cost": 5,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -106,7 +106,7 @@
       {
         "id": "baking_ingredient18",
         "name": "White Vinegar",
-        "cost": 7,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -118,13 +118,13 @@
       {
         "id": "baking_ingredient20",
         "name": "Crushed Pineapple",
-        "cost": 12,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "baking_ingredient21",
         "name": "Chopped Walnuts",
-        "cost": 18,
+        "cost": 20,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -199,13 +199,13 @@
       {
         "id": "mixing_ingredient3",
         "name": "Rum",
-        "cost": 28,
+        "cost": 30,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "mixing_ingredient4",
         "name": "Tequila",
-        "cost": 32,
+        "cost": 30,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -217,7 +217,7 @@
       {
         "id": "mixing_ingredient6",
         "name": "Lime Juice",
-        "cost": 8,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -241,13 +241,13 @@
       {
         "id": "mixing_ingredient10",
         "name": "Fresh Mint Leaves",
-        "cost": 8,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "mixing_ingredient11",
         "name": "Club Soda",
-        "cost": 6,
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
@@ -258,19 +258,55 @@
       },
       {
         "id": "mixing_ingredient13",
-        "name": "Fresh Lemon Juice",
-        "cost": 8,
+        "name": "Lemon Juice",
+        "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "mixing_ingredient14",
         "name": "Angostura Bitters",
-        "cost": 18,
+        "cost": 15,
         "icon": "LocalGroceryStoreIcon"
       },
       {
         "id": "mixing_ingredient15",
         "name": "Fruit Garnish",
+        "cost": 5,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "mixing_ingredient16",
+        "name": "Peach Schnapps",
+        "cost": 20,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "mixing_ingredient17",
+        "name": "Rosemary Sprig",
+        "cost": 5,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "mixing_ingredient18",
+        "name": "Ice",
+        "cost": 0,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "mixing_ingredient19",
+        "name": "Fresh Cranberries",
+        "cost": 5,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "mixing_ingredient20",
+        "name": "Orange Peel",
+        "cost": 5,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "mixing_ingredient21",
+        "name": "Lemon Peel",
         "cost": 5,
         "icon": "LocalGroceryStoreIcon"
       }
@@ -311,15 +347,6 @@
         "cost": 30,
         "quantity": 1,
         "icon": "BuildIcon"
-      },
-      {
-        "id": "mixing_tool5",
-        "name": "Premium Oven",
-        "description": "Exclusive oven access that no one else can use",
-        "effect": "Exclusive oven access",
-        "cost": 200,
-        "quantity": 1,
-        "icon": "KitchenIcon"
       }
     ]
   },
@@ -327,19 +354,19 @@
     {
       "id": "buff1",
       "name": "Double Points",
-      "description": "Earn double points from minigames for 5 minutes",
-      "effect": "2x minigame points for 5 minutes",
+      "description": "Earn double points from minigames for 3 minutes",
+      "effect": "2x minigame points for 3 minutes",
       "cost": 100,
-      "duration": 300,
+      "duration": 180,
       "icon": "TrendingUpIcon"
     },
     {
       "id": "buff2",
       "name": "Debuff Immunity",
-      "description": "Cannot be affected by debuffs for 10 minutes",
-      "effect": "Immune to debuffs for 10 minutes",
+      "description": "Cannot be affected by debuffs for 2 minutes",
+      "effect": "Immune to debuffs for 2 minutes",
       "cost": 150,
-      "duration": 600,
+      "duration": 120,
       "icon": "ShieldIcon"
     },
     {
@@ -356,7 +383,7 @@
       "name": "Debuff Reflect",
       "description": "Reflect debuffs back to the attacker for 5 minutes",
       "effect": "Reflects debuffs back to attacker for 5 minutes",
-      "cost": 180,
+      "cost": 200,
       "duration": 300,
       "icon": "ShieldIcon"
     },
@@ -365,7 +392,7 @@
       "name": "Haggler",
       "description": "Tools and ingredients cost 20% less for 5 minutes",
       "effect": "20% discount on tools and ingredients for 5 minutes",
-      "cost": 120,
+      "cost": 150,
       "duration": 300,
       "icon": "AttachMoneyIcon"
     }
@@ -374,16 +401,16 @@
     {
       "id": "debuff1",
       "name": "Freeze Player",
-      "description": "Freeze a player so they cannot cook for 2 minutes",
-      "effect": "Target cannot cook for 2 minutes",
-      "cost": 120,
+      "description": "Freeze a player so they cannot move from their spot for 2 minutes",
+      "effect": "Target cannot move from their spot for 2 minutes",
+      "cost": 150,
       "duration": 120,
       "icon": "AcUnitIcon"
     },
     {
       "id": "debuff2",
       "name": "Steal Points",
-      "description": "Randomly steal 25-200 points from another player (rounded to nearest 5)",
+      "description": "Randomly steal 25-200 points from another player",
       "effect": "Randomly steal 25-200 points from target",
       "cost": 100,
       "duration": 0,
@@ -394,17 +421,17 @@
       "name": "Steal Item",
       "description": "Steal a random tool from another player",
       "effect": "Steal random tool from target",
-      "cost": 130,
+      "cost": 300,
       "duration": 0,
       "icon": "BlockIcon"
     },
     {
       "id": "debuff4",
       "name": "Store Closed",
-      "description": "Prevent a player from accessing the Store Tab for 1 minute",
-      "effect": "Cannot access Store Tab for 1 minute",
-      "cost": 90,
-      "duration": 60,
+      "description": "Prevent a player from accessing the Store Tab for 2 minutes",
+      "effect": "Cannot access Store Tab for 2 minutes",
+      "cost": 200,
+      "duration": 120,
       "icon": "StoreIcon"
     },
     {
@@ -412,7 +439,7 @@
       "name": "Solar Flare",
       "description": "Prevent a player from seeing the Recipe Tab for 3 minutes",
       "effect": "Cannot see Recipe Tab for 3 minutes",
-      "cost": 110,
+      "cost": 150,
       "duration": 180,
       "icon": "WbSunnyIcon"
     },

@@ -24,7 +24,7 @@ function MinigamesTab() {
   const [activeGame, setActiveGame] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState(0)
   const [cooldownRemaining, setCooldownRemaining] = useState<Record<string, number>>({})
-  const [triviaDifficulty, setTriviaDifficulty] = useState<number | null>(null) // 100, 200, or 300
+  const [triviaDifficulty, setTriviaDifficulty] = useState<number | null>(null) // 50, 100, or 200
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null)
   const finishGameInProgressRef = useRef<boolean>(false) // Track if finishGame is currently executing
@@ -64,7 +64,7 @@ function MinigamesTab() {
     if (!difficultyKey) return 0
     
     const difficulty = parseInt(difficultyKey)
-    const cooldownMinutes = difficulty === 100 ? 5 : difficulty === 200 ? 10 : 20
+    const cooldownMinutes = difficulty === 50 ? 2.5 : difficulty === 100 ? 5 : 10
     const cooldownSeconds = cooldownMinutes * 60
     return calculateCooldownForGame('5_trivia', cooldownSeconds)
   }
@@ -123,9 +123,9 @@ function MinigamesTab() {
     { 
       id: '1', 
       name: 'Quick Click', 
-      description: 'Click as fast as you can for 10 seconds!',
+      description: 'Click as fast as you can for 5 seconds!',
       reward: 25,
-      duration: 10,
+      duration: 5,
       icon: <SportsEsportsIcon />
     },
     { 
@@ -147,8 +147,8 @@ function MinigamesTab() {
     { 
       id: '5', 
       name: 'Trivia', 
-      description: 'Answer trivia questions for 100, 200, or 300 points!',
-      reward: 300,
+      description: 'Answer trivia questions for 50, 100, or 200 points!',
+      reward: 200,
       duration: 20,
       icon: <EmojiEventsIcon />
     }
@@ -288,7 +288,7 @@ function MinigamesTab() {
     // Set cooldown timer for this specific game - store current timestamp
     if (game.id === '5' && triviaDifficulty > 0) {
       // Trivia: all difficulties share the same cooldown based on selected difficulty
-      const cooldownMinutes = triviaDifficulty === 100 ? 5 : triviaDifficulty === 200 ? 10 : 20
+      const cooldownMinutes = triviaDifficulty === 50 ? 2.5 : triviaDifficulty === 100 ? 5 : 10
       const cooldownSeconds = cooldownMinutes * 60
       setLastMinigameTime('5_trivia', Date.now())
       // Store the difficulty used so we know the cooldown duration
@@ -406,11 +406,11 @@ function MinigamesTab() {
                 Choose your difficulty level. Higher points = harder questions = longer cooldown!
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {[100, 200, 300].map((difficulty) => {
+                {[50, 100, 200].map((difficulty) => {
                   // All difficulties share the same cooldown
                   const cooldown = cooldownRemaining['5'] || 0
-                  const cooldownMinutes = difficulty === 100 ? 5 : difficulty === 200 ? 10 : 20
-                  const numChoices = difficulty === 100 ? 3 : difficulty === 200 ? 4 : 5
+                  const cooldownMinutes = difficulty === 50 ? 2.5 : difficulty === 100 ? 5 : 10
+                  const numChoices = difficulty === 50 ? 3 : difficulty === 100 ? 4 : 5
                   return (
                     <Card key={difficulty} sx={{ minWidth: 200 }}>
                       <CardContent>
@@ -487,7 +487,7 @@ function MinigamesTab() {
                       : game.id === '4'
                       ? 'Reward: 5-1000 points'
                       : game.id === '5'
-                      ? 'Reward: 100, 200, or 300 points'
+                      ? 'Reward: 50, 100, or 200 points'
                       : `Reward: ${game.reward} points`}
                   </Typography>
                   {game.id === '5' ? (

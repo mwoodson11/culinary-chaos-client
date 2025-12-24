@@ -14,7 +14,13 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
-  IconButton
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Slider,
+  Alert
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SettingsIcon from '@mui/icons-material/Settings'
@@ -35,6 +41,14 @@ interface CustomItem {
   type: 'ingredient' | 'tool' | 'buff' | 'debuff'
 }
 
+interface AutomatedChallenge {
+  id: string
+  timeValue: number
+  timeType: 'into_game' | 'left_in_game'
+  challengeType: 'alphabet_typing' | 'quick_maths' | 'reflex_test' | 'color_scheme' | 'random'
+  points: number
+}
+
 interface GameSettings {
   gameTime: number // in minutes
   startingPoints: number
@@ -47,6 +61,18 @@ interface GameSettings {
     }
   }
   customItems: CustomItem[]
+  automatedChallenges?: {
+    enabled: boolean
+    automationType?: 'time_based' | 'number_based'
+    timeBasedChallenges?: AutomatedChallenge[]
+    numberBasedConfig?: {
+      numberOfChallenges: number
+      startTime: number // in minutes
+      endTime: number // in minutes
+      challengeType: 'alphabet_typing' | 'quick_maths' | 'reflex_test' | 'color_scheme' | 'random'
+      points: number
+    }
+  }
 }
 
 interface Recipe {
@@ -66,7 +92,7 @@ interface GameSettingsProps {
 
 function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsProps) {
   const { gameType } = useGameSessionStore()
-  const isMixingGame = gameType === 'Mixing Game'
+  const isMixingGame = gameType === 'Mixing Game' || gameType === 'Christmas Mix'
   const gameItems = isMixingGame ? storeItemsData.mixing : storeItemsData.baking
   
   // Default values
@@ -76,13 +102,140 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
   // Helper function to match recipe ingredient names to store item names (case-insensitive, partial match)
   const matchIngredientToStoreItem = (recipeIngredientName: string): string | null => {
     const normalizedRecipeName = recipeIngredientName.toLowerCase()
+    // Remove common words that might interfere with matching
+    const cleanedRecipeName = normalizedRecipeName
+      .replace(/\s*\(optional[^)]*\)/gi, '') // Remove "(optional, to taste)" etc
+      .replace(/\s*for garnish\s*/gi, '') // Remove "for garnish"
+      .replace(/\s*\(optional\)\s*/gi, '') // Remove "(optional)"
+      .trim()
+    
     // Try to find a matching ingredient in the store
     for (const ingredient of gameItems.ingredients) {
       const normalizedStoreName = ingredient.name.toLowerCase()
-      // Check for exact match or if recipe ingredient contains store name or vice versa
-      if (normalizedRecipeName === normalizedStoreName ||
-          normalizedRecipeName.includes(normalizedStoreName) ||
-          normalizedStoreName.includes(normalizedRecipeName)) {
+      
+      // Check for exact match
+      if (cleanedRecipeName === normalizedStoreName) {
+        return ingredient.id
+      }
+      
+      // Check if recipe ingredient contains store name or vice versa
+      // But be more strict - avoid matching partial words (e.g., "lemon" in "lemon peel" shouldn't match "Lemon Juice")
+      // Only match if it's a complete word match or exact substring match
+      const recipeWords = cleanedRecipeName.split(/\s+/)
+      const storeWords = normalizedStoreName.split(/\s+/)
+      
+      // Prevent matching "peel" items with "juice" items (e.g., "lemon peel" shouldn't match "Lemon Juice")
+      const recipeHasPeel = cleanedRecipeName.includes('peel')
+      const storeHasPeel = normalizedStoreName.includes('peel')
+      const recipeHasJuice = cleanedRecipeName.includes('juice')
+      const storeHasJuice = normalizedStoreName.includes('juice')
+      
+      // Don't match if one has "peel" and the other has "juice" (they're different things)
+      if ((recipeHasPeel && storeHasJuice) || (recipeHasJuice && storeHasPeel)) {
+        continue // Skip this ingredient, try next one
+      }
+      
+      // For juice items, require that the recipe specifically mentions that type of juice
+      // e.g., "Lime Juice" should only match if recipe has "lime juice", not just any juice
+      if (storeHasJuice && !recipeHasJuice) {
+        continue // Skip - recipe doesn't mention juice, so don't match any juice items
+      }
+      
+      // If store item is a juice, check that the recipe mentions the specific juice type
+      if (storeHasJuice && recipeHasJuice) {
+        // Extract the juice type from store name (e.g., "lime" from "lime juice")
+        const juiceTypeMatch = normalizedStoreName.match(/^(\w+)\s+juice/)
+        if (juiceTypeMatch) {
+          const juiceType = juiceTypeMatch[1] // e.g., "lime", "lemon", "cranberry"
+          // Only match if recipe contains this specific juice type
+          if (!cleanedRecipeName.includes(juiceType)) {
+            continue // Skip - recipe doesn't mention this specific juice type
+          }
+        }
+      }
+      
+      // Check for exact match first
+      if (cleanedRecipeName === normalizedStoreName) {
+        return ingredient.id
+      }
+      
+      // Check if all words in store name are found in recipe (for multi-word matches)
+      // But filter out common words like "or", "and", "fresh", "frozen" that might cause false matches
+      const significantStoreWords = storeWords.filter(word => 
+        word.length > 2 && !['or', 'and', 'fresh', 'frozen', 'optional'].includes(word)
+      )
+      if (significantStoreWords.length > 0) {
+        const allStoreWordsInRecipe = significantStoreWords.every(word => cleanedRecipeName.includes(word))
+        if (allStoreWordsInRecipe) {
+          // Additional check: if store item is a juice, make sure recipe mentions the specific juice type
+          if (storeHasJuice) {
+            const juiceTypeMatch = normalizedStoreName.match(/^(\w+)\s+juice/)
+            if (juiceTypeMatch) {
+              const juiceType = juiceTypeMatch[1]
+              if (!cleanedRecipeName.includes(juiceType)) {
+                continue // Skip - recipe doesn't mention this specific juice type
+              }
+            }
+          }
+          return ingredient.id
+        }
+      }
+      
+      // Check if all significant words in recipe are found in store name (for multi-word matches)
+      const significantRecipeWords = recipeWords.filter(word => 
+        word.length > 2 && !['or', 'and', 'fresh', 'frozen', 'optional'].includes(word)
+      )
+      if (significantRecipeWords.length > 0) {
+        const allRecipeWordsInStore = significantRecipeWords.every(word => normalizedStoreName.includes(word))
+        if (allRecipeWordsInStore) {
+          return ingredient.id
+        }
+      }
+      
+      // Fallback: simple substring match only if one is a single word
+      if (recipeWords.length === 1 && cleanedRecipeName === normalizedStoreName) {
+        return ingredient.id
+      }
+      if (storeWords.length === 1 && cleanedRecipeName === normalizedStoreName) {
+        return ingredient.id
+      }
+      
+      // Special handling for variations
+      // "Cranberry juice" matches "Cranberry Juice"
+      if (cleanedRecipeName.includes('cranberry') && normalizedStoreName.includes('cranberry')) {
+        if (cleanedRecipeName.includes('juice') && normalizedStoreName.includes('juice')) {
+          return ingredient.id
+        }
+        // "Fresh or frozen cranberries" matches "Fresh Cranberries"
+        if ((cleanedRecipeName.includes('fresh') || cleanedRecipeName.includes('frozen')) && 
+            normalizedStoreName.includes('fresh')) {
+          return ingredient.id
+        }
+      }
+      
+      // "Orange peel or lemon peel" matches "Orange Peel" or "Lemon Peel"
+      // Only match if both recipe and store item contain "peel" to avoid matching "Lemon Juice" with "lemon peel"
+      if (cleanedRecipeName.includes('peel') && normalizedStoreName.includes('peel')) {
+        if ((cleanedRecipeName.includes('orange') && normalizedStoreName.includes('orange')) ||
+            (cleanedRecipeName.includes('lemon') && normalizedStoreName.includes('lemon'))) {
+          return ingredient.id
+        }
+      }
+      
+      // "Peach schnapps" matches "Peach Schnapps"
+      if (cleanedRecipeName.includes('peach') && cleanedRecipeName.includes('schnapps') &&
+          normalizedStoreName.includes('peach') && normalizedStoreName.includes('schnapps')) {
+        return ingredient.id
+      }
+      
+      // "Simple syrup" matches "Simple Syrup"
+      if (cleanedRecipeName.includes('simple') && cleanedRecipeName.includes('syrup') &&
+          normalizedStoreName.includes('simple') && normalizedStoreName.includes('syrup')) {
+        return ingredient.id
+      }
+      
+      // "Rosemary sprig" matches "Rosemary Sprig"
+      if (cleanedRecipeName.includes('rosemary') && normalizedStoreName.includes('rosemary')) {
         return ingredient.id
       }
     }
@@ -91,11 +244,15 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
 
   // Initialize settings with defaults or provided values
   const [gameTime, setGameTime] = useState<number>(() => {
-    // If recipe is selected, use its timeToBake, otherwise use initialSettings or default
+    // Prioritize initialSettings (saved settings) over recipe defaults
+    if (initialSettings?.gameTime !== undefined) {
+      return initialSettings.gameTime
+    }
+    // If recipe is selected and no saved settings, use its timeToBake
     if (selectedRecipe) {
       return selectedRecipe.timeToBake
     }
-    return initialSettings?.gameTime || defaultGameTime
+    return defaultGameTime
   })
   const [startingPoints, setStartingPoints] = useState<number>(
     initialSettings?.startingPoints || defaultStartingPoints
@@ -131,7 +288,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
         }
       } else {
         items[item.id] = {
-          enabled: true,
+          enabled: !isTool, // Tools default to disabled, others to enabled
           cost: item.cost,
           quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined,
           duration: isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
@@ -155,7 +312,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
           }
         } else {
           items[item.id] = {
-            enabled: true,
+            enabled: item.type !== 'tool', // Tools default to disabled, others to enabled
             cost: item.cost,
             quantity: item.type === 'tool' ? item.quantity : undefined,
             duration: (item.type === 'buff' || item.type === 'debuff') ? item.duration : undefined
@@ -210,18 +367,48 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
   const [customItems, setCustomItems] = useState<CustomItem[]>(
     initialSettings?.customItems || []
   )
+  const [automatedChallengesEnabled, setAutomatedChallengesEnabled] = useState<boolean>(
+    initialSettings?.automatedChallenges?.enabled || false
+  )
+  const [automationType, setAutomationType] = useState<'time_based' | 'number_based'>(
+    initialSettings?.automatedChallenges?.automationType || 'time_based'
+  )
+  const [timeBasedChallenges, setTimeBasedChallenges] = useState<AutomatedChallenge[]>(
+    initialSettings?.automatedChallenges?.timeBasedChallenges || []
+  )
+  const [numberOfChallenges, setNumberOfChallenges] = useState<number>(
+    initialSettings?.automatedChallenges?.numberBasedConfig?.numberOfChallenges || 3
+  )
+  const [numberBasedStartTime, setNumberBasedStartTime] = useState<number>(
+    initialSettings?.automatedChallenges?.numberBasedConfig?.startTime || 10
+  )
+  const [numberBasedEndTime, setNumberBasedEndTime] = useState<number>(
+    initialSettings?.automatedChallenges?.numberBasedConfig?.endTime || 50
+  )
+  const [numberBasedChallengeType, setNumberBasedChallengeType] = useState<'alphabet_typing' | 'quick_maths' | 'reflex_test' | 'color_scheme' | 'random'>(
+    initialSettings?.automatedChallenges?.numberBasedConfig?.challengeType || 'random'
+  )
+  const [numberBasedPoints, setNumberBasedPoints] = useState<number>(
+    initialSettings?.automatedChallenges?.numberBasedConfig?.points || 100
+  )
+  const [timeBasedError, setTimeBasedError] = useState<string | null>(null)
+  const [numberBasedError, setNumberBasedError] = useState<string | null>(null)
 
   // Update gameTime when recipe changes
+  // But only if we don't have saved settings (initialSettings) to preserve user modifications
   useEffect(() => {
-    if (selectedRecipe) {
+    if (selectedRecipe && !initialSettings?.gameTime) {
       setGameTime(selectedRecipe.timeToBake)
     }
-  }, [selectedRecipe])
+  }, [selectedRecipe, initialSettings?.gameTime])
 
-  // Update storeItems when recipe changes (only for baking games)
+  // Update storeItems when recipe changes (for baking games and Christmas Mix)
   // This effect runs when selectedRecipe changes OR when component mounts with a recipe
+  // But only if we don't have saved settings (initialSettings.storeItems) to preserve user modifications
   useEffect(() => {
-    if (selectedRecipe && !isMixingGame) {
+    // Only apply recipe-based ingredient toggling if we don't have saved settings
+    // This prevents overwriting user modifications when reopening the dialog
+    if (selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix') && !initialSettings?.storeItems) {
       setStoreItems(prev => {
         const updated = { ...prev }
         
@@ -267,8 +454,8 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
         
         return updated
       })
-    } else if (!selectedRecipe && !isMixingGame) {
-      // If no recipe is selected, ensure all ingredients are enabled
+    } else if (!selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix') && !initialSettings?.storeItems) {
+      // If no recipe is selected and no saved settings, ensure all ingredients are enabled
       setStoreItems(prev => {
         const updated = { ...prev }
         gameItems.ingredients.forEach(ingredient => {
@@ -282,7 +469,62 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
         return updated
       })
     }
-  }, [selectedRecipe, isMixingGame, gameItems.ingredients])
+  }, [selectedRecipe, gameType, gameItems.ingredients, initialSettings?.storeItems])
+
+  // Validate time-based challenges are at least 5 minutes apart
+  useEffect(() => {
+    if (automationType === 'time_based' && timeBasedChallenges.length > 0) {
+      const errors: string[] = []
+      
+      // Convert all challenges to "minutes into game" for comparison
+      const challengeTimes: Array<{ time: number; index: number }> = []
+      timeBasedChallenges.forEach((challenge, index) => {
+        let time: number
+        if (challenge.timeType === 'into_game') {
+          time = challenge.timeValue
+        } else {
+          // Convert "minutes left" to "minutes into game"
+          time = gameTime - challenge.timeValue
+        }
+        challengeTimes.push({ time, index })
+      })
+      
+      // Sort by time
+      challengeTimes.sort((a, b) => a.time - b.time)
+      
+      // Check spacing between consecutive challenges
+      for (let i = 0; i < challengeTimes.length - 1; i++) {
+        const timeDiff = Math.abs(challengeTimes[i + 1].time - challengeTimes[i].time)
+        if (timeDiff < 5) {
+          errors.push(`Challenges ${challengeTimes[i].index + 1} and ${challengeTimes[i + 1].index + 1} are too close (${timeDiff} minutes apart). Challenges must be at least 5 minutes apart.`)
+        }
+      }
+      
+      if (errors.length > 0) {
+        setTimeBasedError(errors[0]) // Show first error
+      } else {
+        setTimeBasedError(null)
+      }
+    } else {
+      setTimeBasedError(null)
+    }
+  }, [timeBasedChallenges, automationType, gameTime])
+
+  // Validate number-based challenges can fit in the time range
+  useEffect(() => {
+    if (automationType === 'number_based') {
+      const timeRange = numberBasedEndTime - numberBasedStartTime
+      const minTimeNeeded = (numberOfChallenges - 1) * 5 // Each challenge needs 5 minutes spacing
+      
+      if (timeRange < minTimeNeeded) {
+        setNumberBasedError(`Too many challenges for the time range. With ${numberOfChallenges} challenges, you need at least ${minTimeNeeded} minutes between start and end time.`)
+      } else {
+        setNumberBasedError(null)
+      }
+    } else {
+      setNumberBasedError(null)
+    }
+  }, [automationType, numberOfChallenges, numberBasedStartTime, numberBasedEndTime])
 
   const handleItemToggle = (itemId: string) => {
     setStoreItems(prev => {
@@ -384,7 +626,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
         // Item not in storeItems - use current state from storeItems if available, otherwise default
         // This should rarely happen since useEffect initializes all items, but as a safeguard:
         updatedStoreItems[item.id] = {
-          enabled: isIngredient ? false : true, // Ingredients default to disabled, others to enabled
+          enabled: isIngredient ? false : !isTool, // Ingredients and tools default to disabled, others to enabled
           cost: item.cost,
           quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined,
           duration: isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
@@ -396,7 +638,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
     customItems.forEach(item => {
       if (!updatedStoreItems[item.id]) {
         updatedStoreItems[item.id] = {
-          enabled: true,
+          enabled: item.type !== 'tool', // Tools default to disabled, others to enabled
           cost: item.cost,
           quantity: item.type === 'tool' ? item.quantity : undefined,
           duration: (item.type === 'buff' || item.type === 'debuff') ? item.duration : undefined
@@ -421,11 +663,35 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
       }
     })
     
+    // Validate before saving
+    if (automatedChallengesEnabled) {
+      if (automationType === 'time_based' && timeBasedError) {
+        alert('Please fix the time-based challenge errors before saving.')
+        return
+      }
+      if (automationType === 'number_based' && numberBasedError) {
+        alert('Please fix the number-based challenge errors before saving.')
+        return
+      }
+    }
+
     onSave({
       gameTime,
       startingPoints,
       storeItems: updatedStoreItems,
-      customItems
+      customItems,
+      automatedChallenges: {
+        enabled: automatedChallengesEnabled,
+        automationType: automatedChallengesEnabled ? automationType : undefined,
+        timeBasedChallenges: automatedChallengesEnabled && automationType === 'time_based' ? timeBasedChallenges : undefined,
+        numberBasedConfig: automatedChallengesEnabled && automationType === 'number_based' ? {
+          numberOfChallenges,
+          startTime: numberBasedStartTime,
+          endTime: numberBasedEndTime,
+          challengeType: numberBasedChallengeType,
+          points: numberBasedPoints
+        } : undefined
+      }
     })
   }
 
@@ -442,13 +708,21 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
     allItems.forEach(item => {
       const isTool = 'quantity' in item || gameItems.tools.some(t => t.id === item.id)
       items[item.id] = {
-        enabled: true,
+        enabled: isTool ? false : true, // Tools default to disabled, others to enabled
         cost: item.cost,
         quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined
       }
     })
     setStoreItems(items)
     setCustomItems([]) // Clear custom items on reset
+    setAutomatedChallengesEnabled(false)
+    setAutomationType('time_based')
+    setTimeBasedChallenges([])
+    setNumberOfChallenges(3)
+    setNumberBasedStartTime(10)
+    setNumberBasedEndTime(50)
+    setNumberBasedChallengeType('random')
+    setNumberBasedPoints(100)
   }
 
   const getItemById = (id: string) => {
@@ -479,7 +753,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
     // Check if item is a tool - only if it's not a buff/debuff
     const isTool = !isBuffOrDebuff && ('quantity' in item || gameItems.tools.some(t => t.id === itemId) || itemType === 'tool')
     const itemSetting = storeItems[itemId] || { 
-      enabled: true, 
+      enabled: isTool ? false : true, // Tools default to disabled, others to enabled
       cost: item.cost,
       quantity: isTool && 'quantity' in item ? (item as any).quantity : undefined,
       duration: isBuffOrDebuff && 'duration' in item ? (item as any).duration : undefined
@@ -588,7 +862,14 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
                   type="number"
                   label="Starting Points"
                   value={startingPoints}
-                  onChange={(e) => setStartingPoints(parseInt(e.target.value) || defaultStartingPoints)}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value)
+                    if (isNaN(value)) {
+                      setStartingPoints(defaultStartingPoints)
+                    } else {
+                      setStartingPoints(Math.max(0, value))
+                    }
+                  }}
                   inputProps={{ min: 0 }}
                 />
               </Grid>
@@ -613,9 +894,56 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
               </AccordionSummary>
               <AccordionDetails>
                 <Box>
-                  {gameItems.ingredients.map(ingredient =>
-                    renderItemRow(ingredient.id)
-                  )}
+                  {(() => {
+                    // For Mixing Game and Christmas Mix, organize into liquors and other ingredients
+                    if (isMixingGame) {
+                      // Define liquors (alcoholic spirits) - check for exact matches or contains
+                      const liquorKeywords = ['vodka', 'gin', 'rum', 'tequila', 'triple sec', 'bourbon', 'whiskey', 'schnapps']
+                      
+                      // Helper function to check if an ingredient is a liquor
+                      const isLiquor = (ingredientName: string): boolean => {
+                        const lowerName = ingredientName.toLowerCase()
+                        return liquorKeywords.some(keyword => lowerName.includes(keyword))
+                      }
+                      
+                      // Separate ingredients into liquors and others
+                      const liquors = gameItems.ingredients
+                        .filter(ing => isLiquor(ing.name))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                      
+                      const otherIngredients = gameItems.ingredients
+                        .filter(ing => !isLiquor(ing.name))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                      
+                      return (
+                        <>
+                          {/* Liquors Section */}
+                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mt: 1, mb: 1 }}>
+                            Liquors
+                          </Typography>
+                          {liquors.map(ingredient =>
+                            renderItemRow(ingredient.id)
+                          )}
+                          
+                          {/* Other Ingredients Section */}
+                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mt: 2, mb: 1 }}>
+                            Other Ingredients
+                          </Typography>
+                          {otherIngredients.map(ingredient =>
+                            renderItemRow(ingredient.id)
+                          )}
+                        </>
+                      )
+                    } else {
+                      // For Baking Game, just sort alphabetically
+                      const sortedIngredients = [...gameItems.ingredients].sort((a, b) => 
+                        a.name.localeCompare(b.name)
+                      )
+                      return sortedIngredients.map(ingredient =>
+                        renderItemRow(ingredient.id)
+                      )
+                    }
+                  })()}
                 </Box>
               </AccordionDetails>
             </Accordion>
@@ -703,7 +1031,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
                       setStoreItems({
                         ...storeItems,
                         [newItem.id]: {
-                          enabled: true,
+                          enabled: newItem.type === 'tool' ? false : true, // Tools default to disabled, others to enabled
                           cost: newItem.cost,
                           quantity: newItem.type === 'tool' ? newItem.quantity : undefined,
                           duration: (newItem.type === 'buff' || newItem.type === 'debuff') ? newItem.duration : undefined
@@ -714,6 +1042,285 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
                 </Box>
               </AccordionDetails>
             </Accordion>
+          </Box>
+
+          <Divider />
+
+          {/* Automated Challenges */}
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Automated Challenges
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Automatically trigger challenges during the game
+            </Typography>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={automatedChallengesEnabled}
+                  onChange={(e) => setAutomatedChallengesEnabled(e.target.checked)}
+                />
+              }
+              label="Enable Automated Challenges"
+              sx={{ mb: 2 }}
+            />
+
+            {automatedChallengesEnabled && (
+              <Box sx={{ mt: 2 }}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Automation Type</InputLabel>
+                  <Select
+                    value={automationType}
+                    label="Automation Type"
+                    onChange={(e) => setAutomationType(e.target.value as 'time_based' | 'number_based')}
+                  >
+                    <MenuItem value="time_based">Time-Based</MenuItem>
+                    <MenuItem value="number_based">Number-Based</MenuItem>
+                  </Select>
+                </FormControl>
+
+                {automationType === 'time_based' && (
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="subtitle2">
+                        Time-Based Challenges
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          const newChallenge: AutomatedChallenge = {
+                            id: `challenge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            timeValue: 5,
+                            timeType: 'into_game',
+                            challengeType: 'random',
+                            points: 100
+                          }
+                          setTimeBasedChallenges([...timeBasedChallenges, newChallenge])
+                        }}
+                      >
+                        Add Challenge
+                      </Button>
+                    </Box>
+
+                    {timeBasedError && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        {timeBasedError}
+                      </Alert>
+                    )}
+                    {timeBasedChallenges.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mb: 2 }}>
+                        No challenges configured. Click "Add Challenge" to add one.
+                      </Typography>
+                    ) : (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {timeBasedChallenges.map((challenge, index) => (
+                          <Box
+                            key={challenge.id}
+                            sx={{
+                              p: 2,
+                              border: '1px solid #e0e0e0',
+                              borderRadius: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 2
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="subtitle2">
+                                Challenge {index + 1}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => {
+                                  setTimeBasedChallenges(timeBasedChallenges.filter((_, i) => i !== index))
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Box>
+
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} sm={6}>
+                                <TextField
+                                  fullWidth
+                                  type="number"
+                                  label="Time Value"
+                                  value={challenge.timeValue}
+                                  onChange={(e) => {
+                                    const newChallenges = [...timeBasedChallenges]
+                                    newChallenges[index].timeValue = parseInt(e.target.value) || 0
+                                    setTimeBasedChallenges(newChallenges)
+                                    // Validation will happen in useEffect
+                                  }}
+                                  error={timeBasedError !== null && timeBasedError.includes(`Challenge ${index + 1}`)}
+                                  helperText={timeBasedError && timeBasedError.includes(`Challenge ${index + 1}`) ? timeBasedError : undefined}
+                                  size="small"
+                                  inputProps={{ min: 0 }}
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth size="small">
+                                  <InputLabel>Time Type</InputLabel>
+                                  <Select
+                                    value={challenge.timeType}
+                                    label="Time Type"
+                                    onChange={(e) => {
+                                      const newChallenges = [...timeBasedChallenges]
+                                      newChallenges[index].timeType = e.target.value as 'into_game' | 'left_in_game'
+                                      setTimeBasedChallenges(newChallenges)
+                                      // Validation will happen in useEffect
+                                    }}
+                                  >
+                                    <MenuItem value="into_game">minutes into the game</MenuItem>
+                                    <MenuItem value="left_in_game">minutes left in the game</MenuItem>
+                                  </Select>
+                                </FormControl>
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth size="small">
+                                  <InputLabel>Challenge Type</InputLabel>
+                                  <Select
+                                    value={challenge.challengeType}
+                                    label="Challenge Type"
+                                    onChange={(e) => {
+                                      const newChallenges = [...timeBasedChallenges]
+                                      newChallenges[index].challengeType = e.target.value as AutomatedChallenge['challengeType']
+                                      setTimeBasedChallenges(newChallenges)
+                                    }}
+                                  >
+                                    <MenuItem value="random">Random</MenuItem>
+                                    <MenuItem value="alphabet_typing">Type the Alphabet</MenuItem>
+                                    <MenuItem value="quick_maths">Quick Maths</MenuItem>
+                                    <MenuItem value="reflex_test">Reflex Test</MenuItem>
+                                    <MenuItem value="color_scheme">Color Scheme</MenuItem>
+                                  </Select>
+                                </FormControl>
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <TextField
+                                  fullWidth
+                                  type="number"
+                                  label="Points for Winner"
+                                  value={challenge.points}
+                                  onChange={(e) => {
+                                    const newChallenges = [...timeBasedChallenges]
+                                    newChallenges[index].points = parseInt(e.target.value) || 0
+                                    setTimeBasedChallenges(newChallenges)
+                                  }}
+                                  size="small"
+                                  inputProps={{ min: 1 }}
+                                />
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                )}
+
+                {automationType === 'number_based' && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                      Number-Based Challenges
+                    </Typography>
+                    {numberBasedError && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        {numberBasedError}
+                      </Alert>
+                    )}
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Number of Challenges"
+                          value={numberOfChallenges}
+                          onChange={(e) => setNumberOfChallenges(Math.max(1, parseInt(e.target.value) || 1))}
+                          size="small"
+                          inputProps={{ min: 1 }}
+                          helperText="Number of automated challenges that will occur during the game"
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography gutterBottom>
+                          Start Time: {numberBasedStartTime} minutes
+                        </Typography>
+                        <Slider
+                          value={numberBasedStartTime}
+                          onChange={(_, newValue) => {
+                            const value = Array.isArray(newValue) ? newValue[0] : newValue
+                            setNumberBasedStartTime(Math.min(value, numberBasedEndTime))
+                          }}
+                          min={0}
+                          max={gameTime}
+                          step={1}
+                          marks={[
+                            { value: 0, label: '0' },
+                            { value: gameTime, label: `${gameTime}` }
+                          ]}
+                          valueLabelDisplay="auto"
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography gutterBottom>
+                          End Time: {numberBasedEndTime} minutes
+                        </Typography>
+                        <Slider
+                          value={numberBasedEndTime}
+                          onChange={(_, newValue) => {
+                            const value = Array.isArray(newValue) ? newValue[0] : newValue
+                            setNumberBasedEndTime(Math.max(value, numberBasedStartTime))
+                          }}
+                          min={0}
+                          max={gameTime}
+                          step={1}
+                          marks={[
+                            { value: 0, label: '0' },
+                            { value: gameTime, label: `${gameTime}` }
+                          ]}
+                          valueLabelDisplay="auto"
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          Challenges will occur randomly between {numberBasedStartTime} and {numberBasedEndTime} minutes into the game
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Challenge Type</InputLabel>
+                          <Select
+                            value={numberBasedChallengeType}
+                            label="Challenge Type"
+                            onChange={(e) => setNumberBasedChallengeType(e.target.value as typeof numberBasedChallengeType)}
+                          >
+                            <MenuItem value="random">Random</MenuItem>
+                            <MenuItem value="alphabet_typing">Type the Alphabet</MenuItem>
+                            <MenuItem value="quick_maths">Quick Maths</MenuItem>
+                            <MenuItem value="reflex_test">Reflex Test</MenuItem>
+                            <MenuItem value="color_scheme">Color Scheme</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Points for Winner"
+                          value={numberBasedPoints}
+                          onChange={(e) => setNumberBasedPoints(Math.max(1, parseInt(e.target.value) || 1))}
+                          size="small"
+                          inputProps={{ min: 1 }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+              </Box>
+            )}
           </Box>
 
           {/* Action Buttons */}
