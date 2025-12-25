@@ -9,12 +9,14 @@ function TimeUpScreen() {
         sx={{ 
           p: 6, 
           textAlign: 'center',
-          bgcolor: 'warning.light',
-          borderRadius: 3
+          bgcolor: 'background.paper',
+          borderRadius: 3,
+          border: 2,
+          borderColor: 'primary.main'
         }}
       >
-        <AccessTimeIcon sx={{ fontSize: 80, color: 'warning.main', mb: 3 }} />
-        <Typography variant="h3" gutterBottom color="warning.dark" fontWeight="bold">
+        <AccessTimeIcon sx={{ fontSize: 80, color: 'primary.main', mb: 3 }} />
+        <Typography variant="h3" gutterBottom color="primary.main" fontWeight="bold">
           Time's Up!
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>

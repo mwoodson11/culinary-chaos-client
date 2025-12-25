@@ -196,42 +196,67 @@ function JoinGameComponent() {
 
             {disconnectedPlayers.length > 0 ? (
               <>
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  {disconnectedPlayers.map((player) => (
-                    <Grid item xs={12} sm={6} key={player.username}>
-                      <Card>
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <PersonIcon />
-                              <Typography variant="h6">{player.username}</Typography>
+                <Box
+                  sx={{
+                    maxHeight: '400px',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    mb: 3,
+                    pr: 1,
+                    // Custom scrollbar styling
+                    '&::-webkit-scrollbar': {
+                      width: '8px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                      borderRadius: '4px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      borderRadius: '4px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      },
+                    },
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    {disconnectedPlayers.map((player) => (
+                      <Grid item xs={12} sm={6} key={player.username}>
+                        <Card>
+                          <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <PersonIcon />
+                                <Typography variant="h6">{player.username}</Typography>
+                              </Box>
+                              <Chip 
+                                label={player.role.toUpperCase()} 
+                                color={player.role === 'host' ? 'primary' : 'default'}
+                                size="small"
+                              />
                             </Box>
-                            <Chip 
-                              label={player.role.toUpperCase()} 
-                              color={player.role === 'host' ? 'primary' : 'default'}
-                              size="small"
-                            />
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <EmojiEventsIcon fontSize="small" color="primary" />
-                            <Typography variant="body2">{player.points} points</Typography>
-                          </Box>
-                        </CardContent>
-                        <CardActions>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            color="success"
-                            startIcon={<ReplayIcon />}
-                            onClick={() => handleResumeAsPlayer(player)}
-                          >
-                            Resume as {player.username}
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <EmojiEventsIcon fontSize="small" color="primary" />
+                              <Typography variant="body2">{player.points} points</Typography>
+                            </Box>
+                          </CardContent>
+                          <CardActions>
+                            <Button
+                              fullWidth
+                              variant="contained"
+                              color="success"
+                              startIcon={<ReplayIcon />}
+                              onClick={() => handleResumeAsPlayer(player)}
+                            >
+                              Resume as {player.username}
+                            </Button>
+                          </CardActions>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
                 <Divider sx={{ my: 2 }}>OR</Divider>
               </>
             ) : null}

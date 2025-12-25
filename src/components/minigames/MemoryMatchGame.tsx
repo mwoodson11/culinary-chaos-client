@@ -11,7 +11,7 @@ interface MemoryCard {
 }
 
 interface MemoryMatchGameProps {
-  onComplete: (matchesFound: number) => void
+  onComplete: (matchesFound: number, timedOut?: boolean) => void
   timeLeft: number
 }
 
@@ -46,7 +46,7 @@ function MemoryMatchGame({ onComplete, timeLeft }: MemoryMatchGameProps) {
   // Auto-complete if time runs out
   useEffect(() => {
     if (timeLeft <= 0 && matchesFound < 8) {
-      onComplete(matchesFound)
+      onComplete(matchesFound, true) // Pass true to indicate timeout
     }
   }, [timeLeft, matchesFound]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -124,63 +124,86 @@ function MemoryMatchGame({ onComplete, timeLeft }: MemoryMatchGameProps) {
   }
 
   return (
-    <Box sx={{ mt: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">
+    <Box sx={{ mt: 3, width: '100%', overflow: 'hidden' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3,
+        flexWrap: 'wrap',
+        gap: 1
+      }}>
+        <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
           Matches Found: {matchesFound} / 8
         </Typography>
-        <Typography variant="h6" color={timeLeft <= 10 ? 'error' : 'text.primary'}>
+        <Typography variant="h6" color={timeLeft <= 10 ? 'error' : 'text.primary'} sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
           Time: {timeLeft}s
         </Typography>
       </Box>
 
-      <Grid container spacing={2} sx={{ maxWidth: 600, mx: 'auto' }}>
-        {cards.map((card) => (
-          <Grid item xs={3} key={card.id}>
-            <Card
-              sx={{
-                aspectRatio: '1',
-                cursor: card.isMatched || isProcessing || flippedCards.length >= 2 ? 'default' : 'pointer',
-                opacity: card.isMatched ? 0.6 : 1,
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: card.isMatched || card.isFlipped || isProcessing || flippedCards.length >= 2 ? 'none' : 'scale(1.05)'
-                },
-                bgcolor: card.isMatched 
-                  ? 'success.light' 
-                  : card.isFlipped 
-                    ? 'primary.light' 
-                    : 'grey.300',
-                border: card.isFlipped ? 2 : 1,
-                borderColor: card.isFlipped ? 'primary.main' : 'grey.400'
-              }}
-              onClick={() => handleCardClick(card.id)}
-            >
-              <CardContent
+      <Box sx={{ 
+        width: '100%', 
+        maxWidth: { xs: '100%', sm: 600 }, 
+        mx: 'auto',
+        px: { xs: 1, sm: 0 }
+      }}>
+        <Grid 
+          container 
+          spacing={{ xs: 1, sm: 2 }} 
+          sx={{ 
+            width: '100%',
+            margin: 0
+          }}
+        >
+          {cards.map((card) => (
+            <Grid item xs={3} key={card.id} sx={{ padding: { xs: '4px !important', sm: '8px !important' } }}>
+              <Card
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  p: 1
+                  aspectRatio: '1',
+                  width: '100%',
+                  cursor: card.isMatched || isProcessing || flippedCards.length >= 2 ? 'default' : 'pointer',
+                  opacity: card.isMatched ? 0.6 : 1,
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: card.isMatched || card.isFlipped || isProcessing || flippedCards.length >= 2 ? 'none' : 'scale(1.05)'
+                  },
+                  bgcolor: card.isMatched 
+                    ? 'success.light' 
+                    : card.isFlipped 
+                      ? 'primary.light' 
+                      : 'grey.300',
+                  border: card.isFlipped ? 2 : 1,
+                  borderColor: card.isFlipped ? 'primary.main' : 'grey.400'
                 }}
+                onClick={() => handleCardClick(card.id)}
               >
-                {card.isMatched ? (
-                  <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main' }} />
-                ) : card.isFlipped ? (
-                  <Typography variant="h3" sx={{ fontSize: { xs: 30, sm: 40 } }}>
-                    {cardIcons[card.value - 1]}
-                  </Typography>
-                ) : (
-                  <QuestionMarkIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                <CardContent
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    p: { xs: 0.5, sm: 1 },
+                    '&:last-child': { pb: { xs: 0.5, sm: 1 } }
+                  }}
+                >
+                  {card.isMatched ? (
+                    <CheckCircleIcon sx={{ fontSize: { xs: 24, sm: 40 }, color: 'success.main' }} />
+                  ) : card.isFlipped ? (
+                    <Typography variant="h3" sx={{ fontSize: { xs: 24, sm: 40 }, lineHeight: 1 }}>
+                      {cardIcons[card.value - 1]}
+                    </Typography>
+                  ) : (
+                    <QuestionMarkIcon sx={{ fontSize: { xs: 24, sm: 40 }, color: 'text.secondary' }} />
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
 
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
+      <Box sx={{ mt: 3, textAlign: 'center', px: { xs: 2, sm: 0 } }}>
         <Typography variant="body2" color="text.secondary">
           Click cards to reveal them. Find all 8 pairs to win!
         </Typography>

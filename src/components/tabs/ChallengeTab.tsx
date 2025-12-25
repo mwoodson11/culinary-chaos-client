@@ -573,8 +573,8 @@ function ChallengeTab() {
   const handleEndChallenge = () => {
     if (!currentChallenge || !gameid) return
     
-    // For reflex_test, auto-determine winner (server will handle it)
-    if (currentChallenge.gameType === 'reflex_test') {
+    // For reflex_test and quick_maths, auto-determine winner (server will handle it)
+    if (currentChallenge.gameType === 'reflex_test' || currentChallenge.gameType === 'quick_maths') {
       endChallenge({ gameid, challengeId: currentChallenge.id, winner: '' }) // Empty winner - server will determine
       // Refresh past challenges after ending
       if (gameid) {
@@ -585,6 +585,29 @@ function ChallengeTab() {
     } else {
       setShowWinnerSelection(true)
     }
+  }
+
+  // Check if all participants have finished Quick Maths
+  const allQuickMathsPlayersFinished = () => {
+    if (!currentChallenge || currentChallenge.gameType !== 'quick_maths' || currentChallenge.status !== 'active') {
+      return false
+    }
+    
+    // Check if all participants have results with finishTime
+    const allFinished = currentChallenge.participants.every((participant: string) => {
+      const result = currentChallenge.results?.[participant]
+      if (!result) return false
+      
+      // For Quick Maths, result should be an object with correctAnswers and finishTime
+      if (typeof result === 'object' && result !== null && 'finishTime' in result) {
+        return result.finishTime !== undefined && result.finishTime !== null
+      }
+      
+      // Fallback: if result exists, consider them finished
+      return result !== undefined
+    })
+    
+    return allFinished && currentChallenge.participants.length > 0
   }
 
   const handleConfirmWinner = () => {
@@ -805,14 +828,25 @@ function ChallengeTab() {
                 </Button>
               )}
               {currentChallenge.status === 'active' && !showWinnerSelection && (
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="error"
-                  onClick={handleEndChallenge}
-                >
-                  End Challenge & Select Winner
-                </Button>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {currentChallenge.gameType === 'quick_maths' && allQuickMathsPlayersFinished() && (
+                    <Alert severity="success" sx={{ mb: 1 }}>
+                      All players have finished! You can end the challenge and announce results.
+                    </Alert>
+                  )}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color={currentChallenge.gameType === 'quick_maths' && allQuickMathsPlayersFinished() ? 'success' : 'error'}
+                    onClick={handleEndChallenge}
+                  >
+                    {currentChallenge.gameType === 'quick_maths' && allQuickMathsPlayersFinished()
+                      ? 'End Challenge & Announce Results'
+                      : currentChallenge.gameType === 'reflex_test'
+                      ? 'End Challenge & Announce Results'
+                      : 'End Challenge & Select Winner'}
+                  </Button>
+                </Box>
               )}
               {currentChallenge.status === 'active' && showWinnerSelection && (
                 <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGameSessionStore } from '@/stores/gameSessionStore'
 import PlayerInfoHeader from '@/components/PlayerInfoHeader'
 import HostTimerHeader from '@/components/HostTimerHeader'
-import { RecipeTab, StoreTab, MinigamesTab, ChallengeTab } from '@/components/tabs'
+import { RecipeTab, StoreTab, MinigamesTab, ChallengeTab, DesignsTab } from '@/components/tabs'
 import EventLog from '@/components/EventLog'
 import PlayerStatus from '@/components/PlayerStatus'
 import StoreManagement from '@/components/StoreManagement'
@@ -19,7 +19,7 @@ import { DEBUFF_STORE_CLOSED, DEBUFF_SOLAR_FLARE } from '@/constants'
 
 function GamePlayView() {
   const navigate = useNavigate()
-  const { isHost, players, playerPoints, username, socket, gameid, activeDebuffs } = useGameSessionStore()
+  const { isHost, players, playerPoints, username, socket, gameid, activeDebuffs, gameType } = useGameSessionStore()
   const { showToast, ToastContainer } = useToast()
   const [tabValue, setTabValue] = useState(0)
   const [hostTabValue, setHostTabValue] = useState(0) // Separate tab state for host
@@ -190,7 +190,9 @@ function GamePlayView() {
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     // Block Store tab if Store Closed debuff is active
-    if (newValue === 1 && hasStoreClosed) {
+    // Store tab is at index 2 for Christmas Bake, index 1 for other games
+    const storeTabIndex = gameType === 'Christmas Bake' ? 2 : 1
+    if (newValue === storeTabIndex && hasStoreClosed) {
       showToast('Store Closed! You cannot access the Store Tab right now.', 'warning')
       return
     }
@@ -203,7 +205,9 @@ function GamePlayView() {
     
     setTabValue(newValue)
     // Clear new challenge indicator when Challenge tab is clicked
-    if (newValue === 3) {
+    // Challenge tab index: 4 for Christmas Bake, 3 for other game types
+    const challengeTabIndex = gameType === 'Christmas Bake' ? 4 : 3
+    if (newValue === challengeTabIndex) {
       setHasNewChallenge(false)
     }
   }
@@ -241,7 +245,7 @@ function GamePlayView() {
         {isHost() && (
           <>
             <Grid item xs={12} md={8}>
-              <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+              <Paper elevation={3} sx={{ p: 3, minHeight: '100%', position: 'relative' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h5" gutterBottom>
                     Host Dashboard
@@ -259,23 +263,38 @@ function GamePlayView() {
                     End Game
                   </Button>
                 </Box>
-                <Tabs 
-                  value={hostTabValue} 
-                  onChange={(_event, newValue) => setHostTabValue(newValue)}
-                  sx={{ 
+                <Box
+                  sx={{
+                    position: 'sticky',
+                    top: { xs: 56, sm: 64 }, // Account for AppBar height (56px on mobile, 64px on desktop)
+                    zIndex: 100,
+                    bgcolor: 'background.paper',
+                    pt: 3,
+                    pb: 1,
                     mb: 3,
-                    '& .MuiTabs-scrollButtons.Mui-disabled': {
-                      opacity: 0.3
-                    }
+                    mx: -3,
+                    px: 3,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider'
                   }}
-                  variant="scrollable"
-                  scrollButtons="auto"
-                  allowScrollButtonsMobile
                 >
-                  <Tab label="Challenge" />
-                  <Tab label="Player Status" />
-                  <Tab label="Store Management" />
-                </Tabs>
+                  <Tabs 
+                    value={hostTabValue} 
+                    onChange={(_event, newValue) => setHostTabValue(newValue)}
+                    sx={{ 
+                      '& .MuiTabs-scrollButtons.Mui-disabled': {
+                        opacity: 0.3
+                      }
+                    }}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    allowScrollButtonsMobile
+                  >
+                    <Tab label="Challenge" />
+                    <Tab label="Player Status" />
+                    <Tab label="Store Management" />
+                  </Tabs>
+                </Box>
                 {hostTabValue === 0 && <ChallengeTab />}
                 {hostTabValue === 1 && <PlayerStatus />}
                 {hostTabValue === 2 && <StoreManagement />}
@@ -290,43 +309,59 @@ function GamePlayView() {
         {/* Player View */}
         {!isHost() && (
           <Grid item xs={12} md={8}>
-            <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-              <Tabs 
-                value={tabValue} 
-                onChange={handleTabChange} 
-                sx={{ 
+            <Paper elevation={3} sx={{ p: 3, minHeight: '100%', position: 'relative' }}>
+              <Box
+                sx={{
+                  position: 'sticky',
+                  top: { xs: 56, sm: 64 }, // Account for AppBar height (56px on mobile, 64px on desktop)
+                  zIndex: 100,
+                  bgcolor: 'background.paper',
+                  pt: 3,
+                  pb: 1,
                   mb: 3,
-                  '& .MuiTabs-scrollButtons.Mui-disabled': {
-                    opacity: 0.3
-                  }
+                  mx: -3,
+                  px: 3,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
                 }}
-                variant="scrollable"
-                scrollButtons="auto"
-                allowScrollButtonsMobile
               >
-                <Tab 
-                  label="Recipe" 
-                  disabled={hasSolarFlare}
-                  sx={hasSolarFlare ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                />
-                <Tab 
-                  label="Store" 
-                  disabled={hasStoreClosed}
-                  sx={hasStoreClosed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                />
-                <Tab label="Minigames" />
-                <Tab
-                  label="Challenge"
-                  sx={{
-                    color: hasNewChallenge ? 'error.main' : 'inherit',
-                    fontWeight: hasNewChallenge ? 'bold' : 'normal',
-                    '&.Mui-selected': {
-                      color: hasNewChallenge ? 'error.main' : 'primary.main',
-                      fontWeight: hasNewChallenge ? 'bold' : 'normal'
+                <Tabs 
+                  value={tabValue} 
+                  onChange={handleTabChange} 
+                  sx={{ 
+                    '& .MuiTabs-scrollButtons.Mui-disabled': {
+                      opacity: 0.3
                     }
                   }}
-                />
-              </Tabs>
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  allowScrollButtonsMobile
+                >
+                  <Tab 
+                    label="Recipe" 
+                    disabled={hasSolarFlare}
+                    sx={hasSolarFlare ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                  />
+                  {gameType === 'Christmas Bake' && <Tab label="Designs" />}
+                  <Tab 
+                    label="Store" 
+                    disabled={hasStoreClosed}
+                    sx={hasStoreClosed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                  />
+                  <Tab label="Minigames" />
+                  <Tab
+                    label="Challenge"
+                    sx={{
+                      color: hasNewChallenge ? 'error.main' : 'inherit',
+                      fontWeight: hasNewChallenge ? 'bold' : 'normal',
+                      '&.Mui-selected': {
+                        color: hasNewChallenge ? 'error.main' : 'primary.main',
+                        fontWeight: hasNewChallenge ? 'bold' : 'normal'
+                      }
+                    }}
+                  />
+                </Tabs>
+              </Box>
 
               {tabValue === 0 && !hasSolarFlare && <RecipeTab />}
               {tabValue === 0 && hasSolarFlare && (
@@ -339,8 +374,9 @@ function GamePlayView() {
                   </Typography>
                 </Box>
               )}
-              {tabValue === 1 && !hasStoreClosed && <StoreTab />}
-              {tabValue === 1 && hasStoreClosed && (
+              {gameType === 'Christmas Bake' && tabValue === 1 && <DesignsTab />}
+              {gameType === 'Christmas Bake' && tabValue === 2 && !hasStoreClosed && <StoreTab />}
+              {gameType === 'Christmas Bake' && tabValue === 2 && hasStoreClosed && (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                   <Typography variant="h6" color="error">
                     Store Closed!
@@ -350,8 +386,21 @@ function GamePlayView() {
                   </Typography>
                 </Box>
               )}
-              {tabValue === 2 && <MinigamesTab />}
-              {tabValue === 3 && <ChallengeTab />}
+              {gameType === 'Christmas Bake' && tabValue === 3 && <MinigamesTab />}
+              {gameType === 'Christmas Bake' && tabValue === 4 && <ChallengeTab />}
+              {gameType !== 'Christmas Bake' && tabValue === 1 && !hasStoreClosed && <StoreTab />}
+              {gameType !== 'Christmas Bake' && tabValue === 1 && hasStoreClosed && (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography variant="h6" color="error">
+                    Store Closed!
+                  </Typography>
+                  <Typography variant="body1" sx={{ mt: 2 }}>
+                    You cannot access the Store Tab right now.
+                  </Typography>
+                </Box>
+              )}
+              {gameType !== 'Christmas Bake' && tabValue === 2 && <MinigamesTab />}
+              {gameType !== 'Christmas Bake' && tabValue === 3 && <ChallengeTab />}
             </Paper>
           </Grid>
         )}

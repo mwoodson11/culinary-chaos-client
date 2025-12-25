@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 
 interface NumberGuessGameProps {
   onComplete: (points: number) => void
+  onQuit?: () => void
 }
 
 // Reward points based on attempt number

@@ -15,6 +15,7 @@ export const ROLE_PLAYER = 'player'
 export const GAME_TYPE_BAKING = 'Baking Game'
 export const GAME_TYPE_MIXING = 'Mixing Game'
 export const GAME_TYPE_CHRISTMAS_MIX = 'Christmas Mix'
+export const GAME_TYPE_CHRISTMAS_BAKE = 'Christmas Bake'
 
 // Debuff IDs
 export const DEBUFF_FREEZE = 'debuff1'

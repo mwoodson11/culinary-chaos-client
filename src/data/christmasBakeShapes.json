@@ -1,0 +1,48 @@
+[
+  {
+    "id": "snowman",
+    "name": "Snowman",
+    "image": "https://images.unsplash.com/photo-1703341592447-10ffed78dc9c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+  },
+  {
+    "id": "christmas-tree",
+    "name": "Christmas Tree",
+    "image": "https://f000.backblazeb2.com/file/recipekit-bucket/20240114200504-christmas_tree_tutorial_9.jpg?width=750"
+  },
+  {
+    "id": "christmas-tree-3d",
+    "name": "3D Christmas Tree",
+    "image": "https://www.sweetfixbaker.com/wp-content/uploads/2021/02/image7-1152x1536.jpeg"
+  },
+  {
+    "id": "santa",
+    "name": "Santa",
+    "image": "https://sweetopia.net/wp-content/uploads/2018/11/Candy-Cane-Sugar-Cookie-Recipe-and-Candyland-Santa-Cookies.jpg"
+  },
+  {
+    "id": "reindeer",
+    "name": "Reindeer",
+    "image": "https://images.squarespace-cdn.com/content/v1/602c05cf39fa1301bf0aa5b0/1638459802262-V0JRLZHXJR6VFH86O0EY/Reindeer.jpg?format=500w"
+  },
+  {
+    "id": "gingerbread-man",
+    "name": "Gingerbread Man",
+    "image": "https://i.pinimg.com/1200x/5a/22/93/5a2293212dd16a0380c0687ba5d7f533.jpg"
+  },
+  {
+    "id": "star",
+    "name": "Star",
+    "image": "https://mojo.generalmills.com/api/public/content/r6uBJyX-CEO69flHX9D1rw_webp_base.webp?v=9ed3b6ed&t=191ddcab8d1c415fa10fa00a14351227"
+  },
+  {
+    "id": "ornament",
+    "name": "Ornament",
+    "image": "https://sweetopia.net/wp-content/uploads/2014/11/Marbling-with-Royal-Icing-Tutorial.jpg"
+  },
+  {
+    "id": "snowflake",
+    "name": "Snowflake",
+    "image": "https://whatshouldimakefor.com/wp-content/uploads/2015/12/Snowflake-Cookies-2-768x1152.jpg"
+  }
+]
+

@@ -40,7 +40,9 @@ export const serverEvents = {
   "colorAnswerFeedback": "colorAnswerFeedback",
   "viewingEyePlayerInfo": "viewingEyePlayerInfo",
   "viewingEyeTargetNotified": "viewingEyeTargetNotified",
-  "recipeUnlocked": "recipeUnlocked"
+  "recipeUnlocked": "recipeUnlocked",
+  "designUnlocked": "designUnlocked",
+  "icingUnlocked": "icingUnlocked"
 }
 
 // events emitted by the client that the server listens for
@@ -87,5 +89,7 @@ export const clientEvents = {
   "hostRemoveBuff": "hostRemoveBuff",
   "hostAddDebuff": "hostAddDebuff",
   "hostRemoveDebuff": "hostRemoveDebuff",
-  "purchaseRecipe": "purchaseRecipe"
+  "purchaseRecipe": "purchaseRecipe",
+  "purchaseDesign": "purchaseDesign",
+  "purchaseIcing": "purchaseIcing"
 }

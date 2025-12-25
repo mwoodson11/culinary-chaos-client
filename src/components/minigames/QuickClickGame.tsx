@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 interface QuickClickGameProps {
   onComplete: (clicks: number) => void
   timeLeft: number
+  onQuit?: () => void
 }
 
 function QuickClickGame({ onComplete, timeLeft }: QuickClickGameProps) {

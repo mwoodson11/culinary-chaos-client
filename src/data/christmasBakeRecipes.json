@@ -1,0 +1,97 @@
+[
+  {
+    "id": "christmas-sugar-cookies",
+    "name": "Christmas Sugar Cookies",
+    "image": "https://images.unsplash.com/photo-1703633294266-9a5992c3b37e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ingredients": [
+      { "name": "Butter", "amount": "¾ cup unsalted butter, softened" },
+      { "name": "Sugar", "amount": "¾ cup granulated sugar" },
+      { "name": "Eggs", "amount": "1 large egg" },
+      { "name": "Vanilla Extract", "amount": "1½ tsp vanilla extract" },
+      { "name": "Flour", "amount": "2¼ cups all-purpose flour" },
+      { "name": "Baking Powder", "amount": "½ tsp baking powder" },
+      { "name": "Salt", "amount": "¼ tsp salt" }
+    ],
+    "instructions": [
+      "Beat butter & sugar together until light and fluffy.",
+      "Add egg & vanilla.",
+      "Mix until fully combined.",
+      "Whisk dry ingredients in a separate bowl.",
+      "Add dry ingredients to wet and mix just until dough forms. (Dough should be soft but not sticky.)",
+      "Roll dough between two sheets of parchment to ~¼ inch thick.",
+      "Cut shapes and place on parchment-lined baking sheets.",
+      "Bake 350°F (175°C) for 8–10 minutes.",
+      "Cool before icing."
+    ],
+    "timeToBake": 20,
+    "icings": [
+      {
+        "id": "royal-icing",
+        "name": "Royal Icing",
+        "description": "Best for: Detailed designs, clean lines, stacking cookies, gifting",
+        "finish": "Smooth, matte, dries hard",
+        "ingredients": [
+          { "name": "Powdered Sugar", "amount": "3 cups powdered sugar" },
+          { "name": "Egg Whites", "amount": "2-4 Tbsp egg whites" },
+          { "name": "Water", "amount": "5–6 Tbsp warm water" },
+          { "name": "Vanilla Extract", "amount": "½ tsp vanilla or almond extract (optional)" }
+        ],
+        "instructions": [
+          "Mix powdered sugar + Egg Whites.",
+          "Add water gradually while mixing until smooth.",
+          "Adjust consistency:",
+          "  • Thick (outline): toothpaste consistency",
+          "  • Thin (flood): honey consistency (settles in ~10 seconds)",
+          "Pipe outlines, then flood inside.",
+          "Decorate with dots, marbling, or layered colors.",
+          "Dries fully in 2–6 hours (overnight best)."
+        ],
+        "pros": "Best for: Intricate designs, stacked cookies, professional look",
+        "cons": "Not soft when dry (hard bite)"
+      },
+      {
+        "id": "glaze-icing",
+        "name": "Glaze Icing",
+        "description": "Best for: Quick decorating, shiny finish, minimal tools",
+        "finish": "Glossy, slightly soft but sets firm",
+        "ingredients": [
+          { "name": "Powdered Sugar", "amount": "2 cups powdered sugar" },
+          { "name": "Milk", "amount": "2–3 Tbsp milk or water" },
+          { "name": "Vanilla Extract", "amount": "½ tsp vanilla or almond extract" }
+        ],
+        "instructions": [
+          "Whisk sugar and 2 Tbsp liquid until smooth.",
+          "Add more liquid drop-by-drop until it slowly drips off a spoon.",
+          "Spoon or drizzle over cookies.",
+          "Tilt cookie to spread, or smooth with a spoon.",
+          "Sets in 30–60 minutes."
+        ],
+        "pros": "Best for: Casual decorating, kids helping, quick batches",
+        "cons": "Not ideal for detailed piping"
+      },
+      {
+        "id": "buttercream-icing",
+        "name": "Buttercream Icing",
+        "description": "Best for: Texture, flavor, piping designs, \"bakery-style\" cookies",
+        "finish": "Soft, fluffy, doesn't fully harden",
+        "ingredients": [
+          { "name": "Butter", "amount": "½ cup (1 stick) unsalted butter, softened" },
+          { "name": "Powdered Sugar", "amount": "2 cups powdered sugar" },
+          { "name": "Milk", "amount": "1–2 Tbsp milk or cream" },
+          { "name": "Vanilla Extract", "amount": "1 tsp vanilla" }
+        ],
+        "instructions": [
+          "Beat butter until smooth and creamy.",
+          "Add powdered sugar gradually.",
+          "Beat in milk and vanilla until fluffy.",
+          "Pipe rosettes, swirls, or dollops.",
+          "Spread with a spatula.",
+          "Great for sandwich-style cookies."
+        ],
+        "pros": "Best for: Soft decorating, flavor-first cookies",
+        "cons": "Not stackable or heat-friendly"
+      }
+    ]
+  }
+]
+

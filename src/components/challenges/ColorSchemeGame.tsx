@@ -57,17 +57,14 @@ function ColorSchemeGame({
   // Reset state when new question arrives
   useEffect(() => {
     if (currentQuestion) {
-      // Only re-enable buttons if we're not showing an incorrect answer
-      if (!isIncorrect && !showIncorrect) {
-        setIsDisabled(false)
-      }
-      // Only clear incorrect state if isIncorrect is false (new question arrived)
+      // When a new question arrives and isIncorrect is false, always clear incorrect state
       if (!isIncorrect) {
         setShowIncorrect(false)
         setIncorrectCountdown(null)
+        setIsDisabled(false) // Re-enable buttons for new question
       }
     }
-  }, [currentQuestion, isIncorrect, showIncorrect])
+  }, [currentQuestion, isIncorrect])
 
   // Handle incorrect answer - show countdown and disable buttons
   useEffect(() => {
@@ -202,18 +199,19 @@ function ColorSchemeGame({
 
         {isDoubleQuestion ? (
           // Two combinations display
-          <Box sx={{ mb: 4, textAlign: 'center' }}>
-            <Box sx={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ mb: { xs: 2, sm: 4 }, textAlign: 'center' }}>
+            <Box sx={{ display: 'flex', gap: { xs: 2, sm: 4 }, justifyContent: 'center', flexWrap: 'wrap' }}>
               {currentQuestion && 'combinations' in currentQuestion && currentQuestion.combinations?.map((combo, idx) => {
                 const fontColorHex = colorMap[combo.fontColor.toLowerCase()] || combo.fontColor
                 return (
-                  <Box key={idx} sx={{ minHeight: 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Box key={idx} sx={{ minHeight: { xs: 80, sm: 150 }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography 
                       variant="h2" 
                       sx={{ 
                         fontWeight: 'bold',
                         color: fontColorHex,
-                        textTransform: 'capitalize'
+                        textTransform: 'capitalize',
+                        fontSize: { xs: '2rem', sm: '3.75rem' }
                       }}
                     >
                       {combo.word}
@@ -225,14 +223,15 @@ function ColorSchemeGame({
           </Box>
         ) : (
           // Single combination display
-          <Box sx={{ mb: 4, textAlign: 'center', minHeight: 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ mb: { xs: 2, sm: 4 }, textAlign: 'center', minHeight: { xs: 80, sm: 150 }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {currentQuestion && 'fontColor' in currentQuestion && (
               <Typography 
                 variant="h2" 
                 sx={{ 
                   fontWeight: 'bold',
                   color: colorMap[currentQuestion.fontColor?.toLowerCase() || ''] || currentQuestion.fontColor,
-                  textTransform: 'capitalize'
+                  textTransform: 'capitalize',
+                  fontSize: { xs: '2rem', sm: '3.75rem' }
                 }}
               >
                 {currentQuestion.word}
@@ -243,14 +242,14 @@ function ColorSchemeGame({
 
         {isDoubleQuestion ? (
           // Three buttons for double combinations: 2 matches, 1 match, no match
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center', mb: 3, alignItems: { xs: 'stretch', sm: 'center' } }}>
             <Button
               variant="contained"
               color="success"
               size="large"
               onClick={() => handleAnswer(undefined, 2)}
               disabled={isDisabled || showIncorrect}
-              sx={{ minWidth: 150, fontSize: '1.2rem', py: 1.5 }}
+              sx={{ minWidth: { xs: '100%', sm: 150 }, fontSize: '1.2rem', py: 1.5 }}
             >
               2 Matches
             </Button>
@@ -260,7 +259,7 @@ function ColorSchemeGame({
               size="large"
               onClick={() => handleAnswer(undefined, 1)}
               disabled={isDisabled || showIncorrect}
-              sx={{ minWidth: 150, fontSize: '1.2rem', py: 1.5 }}
+              sx={{ minWidth: { xs: '100%', sm: 150 }, fontSize: '1.2rem', py: 1.5 }}
             >
               1 Match
             </Button>
@@ -270,21 +269,21 @@ function ColorSchemeGame({
               size="large"
               onClick={() => handleAnswer(undefined, 0)}
               disabled={isDisabled || showIncorrect}
-              sx={{ minWidth: 150, fontSize: '1.2rem', py: 1.5 }}
+              sx={{ minWidth: { xs: '100%', sm: 150 }, fontSize: '1.2rem', py: 1.5 }}
             >
               No Match
             </Button>
           </Box>
         ) : (
           // Two buttons for single combination: Match, No Match
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center', mb: 3, alignItems: { xs: 'stretch', sm: 'center' } }}>
             <Button
               variant="contained"
               color="success"
               size="large"
               onClick={() => handleAnswer(true)}
               disabled={isDisabled || showIncorrect}
-              sx={{ minWidth: 150, fontSize: '1.2rem', py: 1.5 }}
+              sx={{ minWidth: { xs: '100%', sm: 150 }, fontSize: '1.2rem', py: 1.5 }}
             >
               Match
             </Button>
@@ -294,7 +293,7 @@ function ColorSchemeGame({
               size="large"
               onClick={() => handleAnswer(false)}
               disabled={isDisabled || showIncorrect}
-              sx={{ minWidth: 150, fontSize: '1.2rem', py: 1.5 }}
+              sx={{ minWidth: { xs: '100%', sm: 150 }, fontSize: '1.2rem', py: 1.5 }}
             >
               No Match
             </Button>

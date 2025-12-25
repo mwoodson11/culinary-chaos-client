@@ -82,6 +82,16 @@ interface Recipe {
   ingredients: Array<{ name: string; amount: string }>
   instructions: string[]
   timeToBake: number
+  icings?: Array<{
+    id: string
+    name: string
+    description?: string
+    finish?: string
+    ingredients: Array<{ name: string; amount: string }>
+    instructions: string[]
+    pros?: string
+    cons?: string
+  }>
 }
 
 interface GameSettingsProps {
@@ -321,8 +331,8 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
       })
     }
     
-    // If a recipe is selected and it's a baking game, auto-toggle ingredients needed for that recipe
-    if (selectedRecipe && !isMixingGame) {
+    // If a recipe is selected and it's a baking game or Christmas Mix, auto-toggle ingredients needed for that recipe
+    if (selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix' || gameType === 'Christmas Bake')) {
       // First, ensure all ingredients are initialized, then disable them
       gameItems.ingredients.forEach(ingredient => {
         // Initialize if not already present
@@ -360,6 +370,34 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
           }
         }
       })
+      
+      // For Christmas Bake, also enable ingredients from icing recipes
+      if (gameType === 'Christmas Bake' && selectedRecipe.icings && Array.isArray(selectedRecipe.icings)) {
+        selectedRecipe.icings.forEach((icing: any) => {
+          if (icing.ingredients && Array.isArray(icing.ingredients)) {
+            icing.ingredients.forEach((icingIngredient: { name: string; amount: string }) => {
+              const matchedItemId = matchIngredientToStoreItem(icingIngredient.name)
+              if (matchedItemId) {
+                // Ensure the item exists
+                if (!items[matchedItemId]) {
+                  const matchedIngredient = gameItems.ingredients.find(ing => ing.id === matchedItemId)
+                  if (matchedIngredient) {
+                    items[matchedItemId] = {
+                      enabled: true,
+                      cost: matchedIngredient.cost
+                    }
+                  }
+                } else {
+                  items[matchedItemId] = {
+                    ...items[matchedItemId],
+                    enabled: true
+                  }
+                }
+              }
+            })
+          }
+        })
+      }
     }
     
     return items
@@ -408,7 +446,7 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
   useEffect(() => {
     // Only apply recipe-based ingredient toggling if we don't have saved settings
     // This prevents overwriting user modifications when reopening the dialog
-    if (selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix') && !initialSettings?.storeItems) {
+    if (selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix' || gameType === 'Christmas Bake') && !initialSettings?.storeItems) {
       setStoreItems(prev => {
         const updated = { ...prev }
         
@@ -452,9 +490,37 @@ function GameSettings({ onSave, initialSettings, selectedRecipe }: GameSettingsP
           }
         })
         
+        // For Christmas Bake, also enable ingredients from icing recipes
+        if (gameType === 'Christmas Bake' && selectedRecipe.icings && Array.isArray(selectedRecipe.icings)) {
+          selectedRecipe.icings.forEach((icing: any) => {
+            if (icing.ingredients && Array.isArray(icing.ingredients)) {
+              icing.ingredients.forEach((icingIngredient: { name: string; amount: string }) => {
+                const matchedItemId = matchIngredientToStoreItem(icingIngredient.name)
+                if (matchedItemId) {
+                  // Ensure the item exists in the updated state
+                  if (!updated[matchedItemId]) {
+                    const matchedIngredient = gameItems.ingredients.find(ing => ing.id === matchedItemId)
+                    if (matchedIngredient) {
+                      updated[matchedItemId] = {
+                        enabled: true,
+                        cost: matchedIngredient.cost
+                      }
+                    }
+                  } else {
+                    updated[matchedItemId] = {
+                      ...updated[matchedItemId],
+                      enabled: true
+                    }
+                  }
+                }
+              })
+            }
+          })
+        }
+        
         return updated
       })
-    } else if (!selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix') && !initialSettings?.storeItems) {
+    } else if (!selectedRecipe && (gameType === 'Baking Game' || gameType === 'Christmas Mix' || gameType === 'Christmas Bake') && !initialSettings?.storeItems) {
       // If no recipe is selected and no saved settings, ensure all ingredients are enabled
       setStoreItems(prev => {
         const updated = { ...prev }

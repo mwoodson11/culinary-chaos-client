@@ -11,6 +11,7 @@ interface TriviaQuestion {
 interface TriviaGameProps {
   onComplete: (points: number, difficulty: number) => void
   difficulty: number // 50, 100, or 200
+  onQuit?: () => void
 }
 
 // Generate a trivia question based on difficulty
@@ -66,7 +67,7 @@ const generateTriviaQuestion = (difficulty: number): TriviaQuestion => {
   }
 }
 
-function TriviaGame({ onComplete, difficulty }: TriviaGameProps) {
+function TriviaGame({ onComplete, difficulty, onQuit }: TriviaGameProps) {
   const theme = useTheme()
   const [question, setQuestion] = useState<TriviaQuestion | null>(null)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)

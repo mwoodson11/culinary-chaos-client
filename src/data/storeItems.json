@@ -75,12 +75,24 @@
       },
       {
         "id": "baking_ingredient13",
+        "name": "Powdered Sugar",
+        "cost": 20,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "baking_ingredient14",
+        "name": "Egg Whites",
+        "cost": 15,
+        "icon": "LocalGroceryStoreIcon"
+      },
+      {
+        "id": "baking_ingredient15",
         "name": "Vegetable Oil",
         "cost": 10,
         "icon": "LocalGroceryStoreIcon"
       },
       {
-        "id": "baking_ingredient14",
+        "id": "baking_ingredient16",
         "name": "Cinnamon",
         "cost": 20,
         "icon": "LocalGroceryStoreIcon"

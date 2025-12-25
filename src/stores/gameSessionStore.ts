@@ -29,6 +29,8 @@ interface GameSessionState {
   gameSettings: any | null // Game settings configured by host
   recipeUnlocked: boolean // For Christmas Mix - tracks if player has unlocked the recipe
   unlockedIngredients: string[] // List of ingredient IDs that the player has unlocked
+  unlockedDesigns: string[] // For Christmas Bake - list of shape IDs that the player has unlocked
+  icingUnlocked: boolean // For Christmas Bake - tracks if player has unlocked the icing recipes
   joinGame: (request: IClient.IJoinGame) => void
   createGame: (request: IClient.ICreateGame) => void
   startGame: () => void
@@ -73,6 +75,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   gameSettings: null,
   recipeUnlocked: false,
   unlockedIngredients: [],
+  unlockedDesigns: [],
+  icingUnlocked: false,
 
   joinGame: (request: IClient.IJoinGame) => {
     console.log("Join Game", request);
@@ -127,8 +131,10 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   activeBuffs: {},
   activeDebuffs: {},
   selectedRecipe: null,
-  recipeUnlocked: false,
-  unlockedIngredients: []
+      recipeUnlocked: false,
+      unlockedIngredients: [],
+      unlockedDesigns: [],
+      icingUnlocked: false
     })
     // Clear session from localStorage when resetting
     localStorage.removeItem('gameSession')
@@ -340,6 +346,12 @@ socket.on(serverEvents.roomUpdate, (response: IServer.IRoomUpdate) => {
 })
 
 socket.on(serverEvents.gameStart, (data: { recipe?: any; settings?: any }) => {
+  const state = useGameSessionStore.getState()
+  const gameType = state.gameType
+  const isHostPlayer = state.isHost()
+  const isChristmasMix = gameType === 'Christmas Mix'
+  const isChristmasBake = gameType === 'Christmas Bake'
+  
   // Store the selected recipe
   if (data?.recipe) {
     useGameSessionStore.setState({ selectedRecipe: data.recipe })
@@ -349,10 +361,13 @@ socket.on(serverEvents.gameStart, (data: { recipe?: any; settings?: any }) => {
     useGameSessionStore.setState({ gameSettings: data.settings })
   }
   // Clear inventory and active buffs/debuffs for new game
+  // Also ensure recipeUnlocked is set correctly for Christmas Mix/Bake players
   useGameSessionStore.setState({ 
     inventory: [],
     activeBuffs: {},
-    activeDebuffs: {}
+    activeDebuffs: {},
+    // For Christmas Mix/Bake, ensure recipe is locked for players (host always has it unlocked)
+    recipeUnlocked: isHostPlayer || (!isChristmasMix && !isChristmasBake) ? true : false
   })
 })
 
@@ -372,6 +387,8 @@ socket.on(serverEvents.rejoinSuccess, (data: {
   gameStarted?: boolean;
   unlockedRecipe?: boolean;
   unlockedIngredients?: string[];
+  unlockedDesigns?: string[];
+  unlockedIcing?: boolean;
 }) => {
   // Add icons to inventory items
   const inventoryWithIcons = addIconsToInventory(data.inventory)
@@ -384,8 +401,10 @@ socket.on(serverEvents.rejoinSuccess, (data: {
     players: data.players,
     gameType: data.gameType,
     selectedRecipe: data.recipe || null,
-    recipeUnlocked: data.unlockedRecipe ?? (data.role === 'host' && data.gameType === 'Christmas Mix'),
-    unlockedIngredients: data.unlockedIngredients || []
+    recipeUnlocked: data.unlockedRecipe ?? (data.role === 'host' && (data.gameType === 'Christmas Mix' || data.gameType === 'Christmas Bake')),
+    unlockedIngredients: data.unlockedIngredients || [],
+    unlockedDesigns: data.unlockedDesigns || [],
+    icingUnlocked: data.unlockedIcing ?? (data.role === 'host' && data.gameType === 'Christmas Bake')
   })
   useGameSessionStore.getState().saveSession()
 })
@@ -450,6 +469,24 @@ socket.on(serverEvents.error, (message: string) => {
       alert(message)
     }
   }
+})
+
+socket.on(serverEvents.recipeUnlocked, (data: { unlocked: boolean }) => {
+  useGameSessionStore.setState({ recipeUnlocked: data.unlocked })
+})
+
+socket.on(serverEvents.designUnlocked, (data: { shapeId: string; unlocked: boolean }) => {
+  if (data.unlocked) {
+    const state = useGameSessionStore.getState()
+    const currentUnlocked = state.unlockedDesigns || []
+    if (!currentUnlocked.includes(data.shapeId)) {
+      useGameSessionStore.setState({ unlockedDesigns: [...currentUnlocked, data.shapeId] })
+    }
+  }
+})
+
+socket.on(serverEvents.icingUnlocked, (data: { unlocked: boolean }) => {
+  useGameSessionStore.setState({ icingUnlocked: data.unlocked })
 })
 
 socket.on(serverEvents.usernameTaken, (newUsername: string) => {

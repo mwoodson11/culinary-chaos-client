@@ -16,12 +16,14 @@ function ThankYouScreen() {
         sx={{ 
           p: 6, 
           textAlign: 'center',
-          bgcolor: 'success.light',
-          borderRadius: 3
+          bgcolor: 'background.paper',
+          borderRadius: 3,
+          border: 2,
+          borderColor: 'primary.main'
         }}
       >
-        <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main', mb: 3 }} />
-        <Typography variant="h3" gutterBottom color="success.dark" fontWeight="bold">
+        <CheckCircleIcon sx={{ fontSize: 80, color: 'primary.main', mb: 3 }} />
+        <Typography variant="h3" gutterBottom color="primary.main" fontWeight="bold">
           Thank You for Playing!
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mt: 2, mb: 4 }}>
@@ -29,6 +31,7 @@ function ThankYouScreen() {
         </Typography>
         <Button
           variant="contained"
+          color="primary"
           size="large"
           onClick={handleGoHome}
           sx={{ mt: 2, px: 4, py: 1.5 }}

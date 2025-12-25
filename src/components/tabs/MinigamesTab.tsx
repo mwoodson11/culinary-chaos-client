@@ -218,14 +218,14 @@ function MinigamesTab() {
     }
   }, [])
 
-  const handleMemoryMatchComplete = (matches: number) => {
+  const handleMemoryMatchComplete = (matches: number, timedOut?: boolean) => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
     const game = minigames.find(g => g.id === '2')
     if (game) {
-      finishGame(game, matches)
+      finishGame(game, matches, 0, 0, 0, timedOut)
     }
   }
 
@@ -246,12 +246,47 @@ function MinigamesTab() {
     }
   }
 
-  // Helper function to round up to nearest 5
-  const roundUpToNearest5 = (num: number): number => {
-    return Math.ceil(num / 5) * 5
+  // Helper function to round down to nearest 5
+  const roundDownToNearest5 = (num: number): number => {
+    return Math.floor(num / 5) * 5
   }
 
-  const finishGame = (game: Minigame, matchesFound: number = 0, clicks: number = 0, numberGuessPoints: number = 0, triviaDifficulty: number = 0) => {
+  const handleQuit = () => {
+    const game = minigames.find(g => g.id === activeGame)
+    if (game) {
+      // Clear timer if active
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      
+      // Apply cooldown even when quitting early
+      if (game.id === '5' && triviaDifficulty) {
+        const cooldownMinutes = triviaDifficulty === 50 ? 2.5 : triviaDifficulty === 100 ? 5 : 10
+        const cooldownSeconds = cooldownMinutes * 60
+        setLastMinigameTime('5_trivia', Date.now())
+        if (gameid && username) {
+          localStorage.setItem(`trivia_last_difficulty_${gameid}_${username}`, String(triviaDifficulty))
+        }
+        setCooldownRemaining(prev => ({
+          ...prev,
+          ['5']: cooldownSeconds
+        }))
+      } else {
+        setLastMinigameTime(game.id, Date.now())
+        setCooldownRemaining(prev => ({
+          ...prev,
+          [game.id]: MINIGAME_COOLDOWN_SECONDS
+        }))
+      }
+      
+      // Exit the minigame
+      setActiveGame(null)
+      setTriviaDifficulty(null)
+    }
+  }
+
+  const finishGame = (game: Minigame, matchesFound: number = 0, clicks: number = 0, numberGuessPoints: number = 0, triviaDifficulty: number = 0, timedOut: boolean = false) => {
     // Prevent duplicate calls - if finishGame is already executing, return early
     if (finishGameInProgressRef.current) {
       return
@@ -265,8 +300,8 @@ function MinigamesTab() {
     // Calculate reward based on game type
     let baseReward = game.reward
     if (game.id === '1') { // Quick Click game
-      // Reward is number of clicks rounded up to nearest 5
-      baseReward = roundUpToNearest5(clicks)
+      // Reward is number of clicks rounded down to nearest 5
+      baseReward = roundDownToNearest5(clicks)
     } else if (game.id === '2') { // Memory Match game
       // Award points based on matches: 50 points for all 8 matches, scaled down
       baseReward = Math.floor((matchesFound / 8) * game.reward)
@@ -333,10 +368,13 @@ function MinigamesTab() {
       } else {
         // Other games: Always show toast
         if (game.id === '2') {
-          // Memory Match: Different messages for win vs loss
+          // Memory Match: Different messages for win vs loss vs timeout
           if (matchesFound === 8) {
             // Player won - show win message with points
             showToast(`You won! You earned ${finalReward} points!${hasDoublePoints ? ' (Double Points Active!)' : ''}`, 'success')
+          } else if (timedOut) {
+            // Player timed out - show nice try message
+            showToast('Nice Try, play again later', 'info')
           } else {
             // Player lost - show try again message
             showToast('Try again later', 'info')
@@ -377,10 +415,21 @@ function MinigamesTab() {
       {activeGame ? (
         // Show the active minigame, replacing the cards
         <>
+          <Box sx={{ mb: 2, textAlign: 'center' }}>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleQuit}
+              sx={{ mb: 2 }}
+            >
+              Quit
+            </Button>
+          </Box>
           {activeGame === '1' && (
             <QuickClickGame 
               onComplete={handleQuickClickComplete}
               timeLeft={timeLeft}
+              onQuit={handleQuit}
             />
           )}
 
@@ -394,11 +443,20 @@ function MinigamesTab() {
           {activeGame === '4' && (
             <NumberGuessGame 
               onComplete={handleNumberGuessComplete}
+              onQuit={handleQuit}
             />
           )}
 
           {activeGame === '5_select' && (
             <Box sx={{ mt: 3, p: 4, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 3, textAlign: 'center' }}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handleQuit}
+                sx={{ mb: 2 }}
+              >
+                Quit
+              </Button>
               <Typography variant="h5" gutterBottom>
                 Select Trivia Difficulty
               </Typography>
@@ -451,6 +509,7 @@ function MinigamesTab() {
             <TriviaGame 
               onComplete={handleTriviaComplete}
               difficulty={triviaDifficulty}
+              onQuit={handleQuit}
             />
           )}
 

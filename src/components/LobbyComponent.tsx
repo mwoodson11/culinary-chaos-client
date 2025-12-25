@@ -14,6 +14,7 @@ interface Recipe {
   ingredients: Array<{ name: string; amount: string }>
   instructions: string[]
   timeToBake: number
+  selectedShapes?: string[] // For Christmas Bake: array of shape IDs
 }
 
 function LobbyComponent() {
@@ -48,12 +49,15 @@ function LobbyComponent() {
       }
     }
 
-    const handleHostNavigatingToRules = (data?: { recipe?: any }) => {
+    const handleHostNavigatingToRules = (data?: { recipe?: any; settings?: any }) => {
       // Players follow host to rules page
       if (!isHost()) {
-        // Store recipe if provided
+        // Store recipe and settings if provided
         if (data?.recipe) {
           useGameSessionStore.setState({ selectedRecipe: data.recipe })
+        }
+        if (data?.settings) {
+          useGameSessionStore.setState({ gameSettings: data.settings })
         }
         navigate('/game/instructions')
       }
@@ -78,11 +82,18 @@ function LobbyComponent() {
     // Save recipe and settings to store before navigating
     if (selectedRecipe) {
       useGameSessionStore.setState({ selectedRecipe })
-      // Emit event to notify players that host is navigating to rules, include recipe
-      socket.emit(clientEvents.hostNavigatingToRules, { gameid, recipe: selectedRecipe })
+      // Emit event to notify players that host is navigating to rules, include recipe and settings
+      socket.emit(clientEvents.hostNavigatingToRules, { 
+        gameid, 
+        recipe: selectedRecipe,
+        settings: gameSettings || null
+      })
     } else {
       // Emit event even without recipe (shouldn't happen, but safety)
-      socket.emit(clientEvents.hostNavigatingToRules, { gameid })
+      socket.emit(clientEvents.hostNavigatingToRules, { 
+        gameid,
+        settings: gameSettings || null
+      })
     }
     // Navigate to rules page
     navigate('/game/instructions')
@@ -172,7 +183,7 @@ function LobbyComponent() {
                 variant="contained" 
                 color="primary" 
                 onClick={handleStart}
-                disabled={players.filter(player => player !== 'Host').length < 2 || !selectedRecipe}
+                disabled={players.filter(player => player !== 'Host').length < 2 || !selectedRecipe || (gameType === 'Christmas Bake' && (!selectedRecipe.selectedShapes || selectedRecipe.selectedShapes.length === 0))}
               >
                 Start Game
               </Button>

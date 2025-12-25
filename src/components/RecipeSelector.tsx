@@ -4,8 +4,11 @@ import { useGameSessionStore } from '@/stores/gameSessionStore'
 import recipesData from '@/data/recipes.json'
 import cocktailsData from '@/data/cocktails.json'
 import christmasRecipesData from '@/data/christmasRecipes.json'
+import christmasBakeRecipesData from '@/data/christmasBakeRecipes.json'
+import christmasBakeShapesData from '@/data/christmasBakeShapes.json'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import { GAME_TYPE_CHRISTMAS_BAKE } from '@/constants'
 
 interface Recipe {
   id: string
@@ -14,6 +17,13 @@ interface Recipe {
   ingredients: Array<{ name: string; amount: string }>
   instructions: string[]
   timeToBake: number
+  selectedShapes?: string[] // For Christmas Bake: array of shape IDs
+}
+
+interface CookieShape {
+  id: string
+  name: string
+  image: string
 }
 
 interface RecipeSelectorProps {
@@ -25,10 +35,13 @@ function RecipeSelector({ onSelect, selectedRecipe }: RecipeSelectorProps) {
   const { gameType } = useGameSessionStore()
   const isMixingGame = gameType === 'Mixing Game'
   const isChristmasMix = gameType === 'Christmas Mix'
+  const isChristmasBake = gameType === GAME_TYPE_CHRISTMAS_BAKE
   // Load recipes based on game type
-  const allRecipes = (isChristmasMix ? christmasRecipesData : (isMixingGame ? cocktailsData : recipesData)) as Recipe[]
+  const allRecipes = (isChristmasMix ? christmasRecipesData : (isChristmasBake ? christmasBakeRecipesData : (isMixingGame ? cocktailsData : recipesData))) as Recipe[]
   const [localSelected, setLocalSelected] = useState<Recipe | null>(selectedRecipe)
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null)
+  // For Christmas Bake: track selected shapes (up to 3)
+  const [selectedShapes, setSelectedShapes] = useState<string[]>(selectedRecipe?.selectedShapes || [])
   
   // Filter states
   const [timeFilter, setTimeFilter] = useState<string>('all')
@@ -74,8 +87,15 @@ function RecipeSelector({ onSelect, selectedRecipe }: RecipeSelectorProps) {
   }, [allRecipes, timeFilter, missingIngredients])
 
   const handleSelect = (recipe: Recipe) => {
-    setLocalSelected(recipe)
-    onSelect(recipe)
+    // For Christmas Bake, include selected shapes in the recipe
+    if (isChristmasBake) {
+      const recipeWithShapes = { ...recipe, selectedShapes }
+      setLocalSelected(recipeWithShapes)
+      onSelect(recipeWithShapes)
+    } else {
+      setLocalSelected(recipe)
+      onSelect(recipe)
+    }
   }
 
   const handleRandom = () => {
@@ -86,8 +106,100 @@ function RecipeSelector({ onSelect, selectedRecipe }: RecipeSelectorProps) {
     }
   }
 
+  const handleShapeToggle = (shapeId: string) => {
+    setSelectedShapes(prev => {
+      if (prev.includes(shapeId)) {
+        // Remove shape
+        return prev.filter(id => id !== shapeId)
+      } else {
+        // Add shape (max 3)
+        if (prev.length < 3) {
+          return [...prev, shapeId]
+        }
+        return prev
+      }
+    })
+  }
+
   const toggleExpand = (recipeId: string) => {
     setExpandedRecipe(expandedRecipe === recipeId ? null : recipeId)
+  }
+
+  // For Christmas Bake, show shape selection instead of recipe selection
+  if (isChristmasBake) {
+    return (
+      <Box>
+        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+          Select Cookie Shapes (Choose up to 3)
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Selected: {selectedShapes.length} of 3
+        </Typography>
+        <Grid container spacing={2}>
+          {(christmasBakeShapesData as CookieShape[]).map((shape) => {
+            const isSelected = selectedShapes.includes(shape.id)
+            return (
+              <Grid item xs={12} sm={6} md={4} key={shape.id}>
+                <Card 
+                  sx={{ 
+                    height: '100%',
+                    border: isSelected ? 3 : 1,
+                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    cursor: 'pointer',
+                    opacity: !isSelected && selectedShapes.length >= 3 ? 0.5 : 1
+                  }}
+                  onClick={() => handleShapeToggle(shape.id)}
+                >
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={shape.image}
+                    alt={shape.name}
+                    sx={{ objectFit: 'cover' }}
+                  />
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="h6" component="div">
+                        {shape.name}
+                      </Typography>
+                      {isSelected && (
+                        <Chip label="Selected" color="primary" size="small" />
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )
+          })}
+        </Grid>
+        {selectedShapes.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={() => {
+                const recipe = allRecipes[0] // Sugar cookies recipe
+                handleSelect({ ...recipe, selectedShapes })
+              }}
+              disabled={selectedShapes.length === 0}
+            >
+              Confirm Selection ({selectedShapes.length} shape{selectedShapes.length !== 1 ? 's' : ''})
+            </Button>
+          </Box>
+        )}
+        {localSelected && localSelected.selectedShapes && localSelected.selectedShapes.length > 0 && (
+          <Paper elevation={2} sx={{ mt: 3, p: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+            <Typography variant="body1" fontWeight="bold">
+              Selected Shapes: {localSelected.selectedShapes.map(id => {
+                const shape = (christmasBakeShapesData as CookieShape[]).find(s => s.id === id)
+                return shape?.name
+              }).filter(Boolean).join(', ')}
+            </Typography>
+          </Paper>
+        )}
+      </Box>
+    )
   }
 
   return (

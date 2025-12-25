@@ -11,6 +11,7 @@ interface AlphabetTypingGameProps {
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
 function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingGameProps) {
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0)
   const [input, setInput] = useState('')
   const [startTime, setStartTime] = useState<number | null>(null)
   const [isComplete, setIsComplete] = useState(false)
@@ -24,6 +25,9 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
       const now = Date.now()
       setStartTime(now)
       setElapsedTime(0)
+      setCurrentLetterIndex(0)
+      setInput('')
+      setIsComplete(false)
     }
   }, [isActive, startTime])
 
@@ -39,26 +43,48 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
     return () => clearInterval(interval)
   }, [isActive, startTime, isComplete])
 
+  // Check if all letters are complete
   useEffect(() => {
-    if (input.toLowerCase() === ALPHABET && startTime && !isComplete) {
+    if (currentLetterIndex >= ALPHABET.length && startTime && !isComplete) {
       const endTime = Date.now()
       const timeInSeconds = (endTime - startTime) / 1000
       setIsComplete(true)
       setElapsedTime(timeInSeconds) // Set final time
       onComplete(timeInSeconds)
     }
-  }, [input, startTime, isComplete, onComplete])
+  }, [currentLetterIndex, startTime, isComplete, onComplete])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isActive || isComplete) return
     
     const value = e.target.value.toLowerCase()
-    // Only allow typing if it matches the alphabet sequence
-    if (value.length <= ALPHABET.length) {
-      const expectedChar = ALPHABET[value.length - 1]
-      if (value[value.length - 1] === expectedChar || value.length === 0) {
-        setInput(value)
+    
+    // If input is empty, just update state
+    if (value.length === 0) {
+      setInput('')
+      return
+    }
+    
+    // Get the current expected letter
+    const expectedLetter = ALPHABET[currentLetterIndex]
+    
+    // Get the last character typed
+    const lastChar = value[value.length - 1]
+    
+    // Check if the typed character matches the expected letter
+    if (lastChar === expectedLetter) {
+      // Correct letter typed - move to next letter
+      if (currentLetterIndex < ALPHABET.length - 1) {
+        setCurrentLetterIndex(prev => prev + 1)
+      } else {
+        // Last letter (Z) - complete the game
+        setCurrentLetterIndex(ALPHABET.length)
       }
+      // Always clear input after correct letter
+      setInput('')
+    } else {
+      // Wrong letter - clear input immediately
+      setInput('')
     }
   }
 
@@ -68,7 +94,12 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
   }
 
   const getProgress = () => {
-    return (input.length / ALPHABET.length) * 100
+    return (currentLetterIndex / ALPHABET.length) * 100
+  }
+
+  const getCurrentLetter = () => {
+    if (currentLetterIndex >= ALPHABET.length) return ''
+    return ALPHABET[currentLetterIndex].toUpperCase()
   }
 
   // Show countdown if we have one, even if not active yet
@@ -107,7 +138,7 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
           </Typography>
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Type the alphabet (a-z) as fast as you can! The fastest time wins.
+          Type each letter one at a time as it appears. The fastest time wins!
         </Typography>
 
         {isComplete ? (
@@ -123,7 +154,7 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
           <>
             <Box sx={{ mb: 3 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Progress: {input.length} / {ALPHABET.length} letters
+                Progress: {currentLetterIndex} / {ALPHABET.length} letters
               </Typography>
               <Box
                 sx={{
@@ -145,62 +176,23 @@ function AlphabetTypingGame({ onComplete, isActive, countdown }: AlphabetTypingG
               </Box>
             </Box>
 
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: 2, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Type this:
+                Type this letter:
               </Typography>
-              <Box
+              <Typography
                 sx={{
-                  width: '100%',
-                  mb: 2,
-                  // Make it scrollable horizontally on mobile if needed, but try to fit on screen
-                  overflowX: { xs: 'auto', sm: 'visible' },
-                  overflowY: 'hidden',
-                  // Ensure it's always visible with proper height
-                  py: 1,
-                  // Smooth scrolling
-                  scrollBehavior: 'smooth',
-                  // Custom scrollbar styling
-                  '&::-webkit-scrollbar': {
-                    height: 6,
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'primary.main',
-                    borderRadius: 2,
-                  },
+                  fontFamily: 'monospace',
+                  fontSize: { xs: '4rem', sm: '6rem', md: '8rem' },
+                  fontWeight: 'bold',
+                  color: 'primary.main',
+                  letterSpacing: 0,
+                  lineHeight: 1,
+                  my: 2
                 }}
               >
-                <Typography
-                  sx={{
-                    fontFamily: 'monospace',
-                    // Responsive letter spacing - smaller on mobile
-                    letterSpacing: { xs: 0.5, sm: 1, md: 2 },
-                    color: 'text.primary',
-                    // Responsive font size - much smaller on mobile to fit on screen
-                    fontSize: { xs: '0.9rem', sm: '1.2rem', md: '2rem' },
-                    // Allow wrapping on very small screens, but prefer single line
-                    whiteSpace: { xs: 'normal', sm: 'nowrap' },
-                    // Word break to prevent overflow
-                    wordBreak: { xs: 'break-all', sm: 'normal' },
-                    // Line height for better readability when wrapped
-                    lineHeight: { xs: 1.8, sm: 1.5, md: 1.2 },
-                    // Ensure it doesn't overflow
-                    maxWidth: '100%',
-                  }}
-                >
-                  {ALPHABET.split('').map((char, index) => (
-                    <span
-                      key={index}
-                      style={{
-                        color: index < input.length ? 'green' : index === input.length ? 'blue' : 'gray',
-                        textDecoration: index < input.length ? 'underline' : 'none'
-                      }}
-                    >
-                      {char}
-                    </span>
-                  ))}
-                </Typography>
-              </Box>
+                {getCurrentLetter()}
+              </Typography>
             </Box>
 
             <TextField
