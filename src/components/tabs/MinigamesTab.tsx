@@ -509,7 +509,6 @@ function MinigamesTab() {
             <TriviaGame 
               onComplete={handleTriviaComplete}
               difficulty={triviaDifficulty}
-              onQuit={handleQuit}
             />
           )}
 
